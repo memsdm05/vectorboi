@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/ByteArena/box2d"
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/memsdm05/vectorboi/helpers"
+	"vectorboi/helpers"
 )
 
 const PhysicsStep = 1. / 60

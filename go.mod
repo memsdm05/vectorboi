@@ -1,4 +1,4 @@
-module github.com/memsdm05/vectorboi
+module vectorboi
 
 go 1.17
 
