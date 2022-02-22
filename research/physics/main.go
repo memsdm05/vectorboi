@@ -14,9 +14,9 @@ import (
 type vec = cp.Vector
 const (
 	TimeStep = 1. / 60
-	PPM = float64(10)
 )
 
+var PPM = float64(10)
 
 
 // ball properties
@@ -70,6 +70,9 @@ type PhysicsTestGame struct {
 	ball *cp.Body
 	ground *cp.Shape
 
+	off vec
+	last vec
+
 	paused bool
 }
 
@@ -103,6 +106,25 @@ func (p *PhysicsTestGame) Update() error {
 		p.ball.SetVelocityVector(initialBallVel)
 	}
 
+	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+		tx, ty := ebiten.CursorPosition()
+		x, y := float64(tx), float64(ty)
+		if p.last.Length() > 0 {
+			p.off.X += x - p.last.X
+			p.off.Y += y - p.last.Y
+		}
+		p.last.X, p.last.Y = x, y
+	}
+
+	p.last.Mult(0)
+
+	_, dppm := ebiten.Wheel()
+	PPM += dppm
+
+	if PPM < 1 {
+		PPM = 1
+	}
+
 
 	if !p.paused {
 		p.space.Step(TimeStep)
@@ -113,21 +135,21 @@ func (p *PhysicsTestGame) Update() error {
 
 func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
 	ball := pixelize(p.ball.Position())
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentFPS(), ball.X, ball.Y))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentTPS(), ball.X, ball.Y))
 
-	a := pixelize(groundA)
-	b := pixelize(groundB)
+	a := pixelize(groundA).Add(p.off)
+	b := pixelize(groundB).Add(p.off)
 	ebitenutil.DrawLine(screen, a.X, a.Y, b.X, b.Y, red)
-	drawCircle(screen, ball, radius * PPM, orange)
+	drawCircle(screen, ball.Add(p.off), radius * PPM, orange)
 	//ebitenutil.DrawRect(screen, ball.X, ball.Y, 10, 10, Red)
 
 }
 
 func (p *PhysicsTestGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 640, 480
+	return outsideWidth, outsideHeight
 }
 
 func main() {
-	//ebiten.SetWindowResizable(true)
+	ebiten.SetWindowResizable(true)
 	helpers.RunGame(new(PhysicsTestGame))
 }
