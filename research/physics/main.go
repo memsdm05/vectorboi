@@ -1,55 +1,133 @@
 package main
 
 import (
-	"github.com/ByteArena/box2d"
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/jakecoffman/cp"
+	"golang.org/x/image/colornames"
+	"image/color"
 	"vectorboi/helpers"
 )
 
-const PhysicsStep = 1. / 60
+type vec = cp.Vector
+const (
+	TimeStep = 1. / 60
+	PPM = float64(10)
+)
+
+
+
+// ball properties
+var (
+	num = 3
+	radius = 1.828 / 2
+	mass = 83.9146
+	moment         = cp.MomentForCircle(mass, 0, radius, vec{})
+	initialBallPos = vec{20, 5}
+	initialBallVel = vec{-2, -1}
+)
+
+// ground properties
+var (
+	groundA = vec{X: 0, Y: 30}
+	groundB = vec{X: 40, Y: 40}
+)
+
+
+
+var (
+	circleShader = helpers.MustLoadShader("research/data/circle.vert")
+
+	red = colornames.Red
+	orange = colornames.Orange
+)
+
+func pixelize(v vec) vec {
+	return v.Mult(PPM)
+}
+
+func drawCircle(img *ebiten.Image, pos vec, r float64, color color.Color) {
+	op := &ebiten.DrawRectShaderOptions{
+		Uniforms: map[string]interface{}{
+			"Radius": float32(r),
+			"Color": helpers.Color2Slice(color),
+		},
+	}
+
+	d := int(r * 2)
+	cimg := ebiten.NewImage(d, d)
+	cimg.DrawRectShader(d, d, circleShader, op)
+
+	op2 := &ebiten.DrawImageOptions{}
+	op2.GeoM.Translate(pos.X - r, pos.Y - r)
+	img.DrawImage(cimg, op2)
+}
 
 type PhysicsTestGame struct {
-	world box2d.B2World
-	ground *box2d.B2Body
-	fallingBox *box2d.B2Body
+	space *cp.Space
+	ball *cp.Body
+	ground *cp.Shape
+
+	paused bool
 }
 
 func (p *PhysicsTestGame) Init()  {
-	p.world = box2d.MakeB2World(box2d.MakeB2Vec2(0, -10))
+	p.space = cp.NewSpace()
+	p.space.SetGravity(vec{X: 0, Y: 9.8})
+	p.space.Iterations = 10
 
-	groundDef := box2d.NewB2BodyDef()
-	groundDef.Position.Set(0, -10)
-	groundBox := box2d.NewB2PolygonShape()
-	groundBox.SetAsBox(50, 10)
-	p.ground = box2d.NewB2Body(groundDef, &p.world)
-	p.ground.CreateFixture(groundBox, 0)
+	ground := cp.NewSegment(p.space.StaticBody, groundA, groundB, 0)
+	ground.SetFriction(1)
+	p.ground = p.space.AddShape(ground)
+	//p.ground.SetElasticity(0.9)
 
-	fallingBoxDef := box2d.NewB2BodyDef()
-	fallingBoxDef.Type = box2d.B2BodyType.B2_dynamicBody
-	fallingBoxDef.Position.Set(0, 4)
-	fallingBoxBox := box2d.NewB2PolygonShape()
-	fallingBoxBox.SetAsBox(1,1)
-	p.fallingBox = box2d.NewB2Body(fallingBoxDef, &p.world)
-	p.fallingBox.CreateFixture(fallingBoxBox, 1)
+	p.ball = p.space.AddBody(cp.NewBody(mass, moment))
+	p.ball.SetPosition(initialBallPos)
+	p.ball.SetVelocityVector(initialBallVel)
+	ballShape := p.space.AddShape(cp.NewCircle(p.ball, radius, vec{}))
+	ballShape.SetFriction(0.7)
 }
 
 func (p *PhysicsTestGame) Shutdown()  {}
 
 func (p *PhysicsTestGame) Update() error {
-	p.world.Step(PhysicsStep, 10, 10)
+	switch {
+	case inpututil.IsKeyJustReleased(ebiten.KeyR):
+		circleShader = helpers.MustLoadShader("research/data/circle.vert")
+	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
+		p.paused = !p.paused
+	case inpututil.IsKeyJustReleased(ebiten.KeyF):
+		p.ball.SetPosition(initialBallPos)
+		p.ball.SetVelocityVector(initialBallVel)
+	}
+
+
+	if !p.paused {
+		p.space.Step(TimeStep)
+	}
+
 	return nil
 }
 
 func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, "lol")
-	box := ebiten.NewImage(10, 10)
+	ball := pixelize(p.ball.Position())
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentFPS(), ball.X, ball.Y))
+
+	a := pixelize(groundA)
+	b := pixelize(groundB)
+	ebitenutil.DrawLine(screen, a.X, a.Y, b.X, b.Y, red)
+	drawCircle(screen, ball, radius * PPM, orange)
+	//ebitenutil.DrawRect(screen, ball.X, ball.Y, 10, 10, Red)
+
 }
 
 func (p *PhysicsTestGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return 1280, 720
+	return 640, 480
 }
 
 func main() {
+	//ebiten.SetWindowResizable(true)
 	helpers.RunGame(new(PhysicsTestGame))
 }
