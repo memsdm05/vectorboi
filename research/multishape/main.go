@@ -34,7 +34,6 @@ var (
 )
 
 
-
 var (
 	red = colornames.Red
 	orange = colornames.Orange
@@ -44,9 +43,14 @@ func pixelize(v vec) vec {
 	return v.Mult(PPM)
 }
 
-type PhysicsTestGame struct {
+type MulticircleBody struct {
+	*cp.Body
+	circles []*cp.Circle
+}
+
+type MultishapeGame struct {
 	space *cp.Space
-	ball *cp.Body
+	multi *cp.Body
 	ground *cp.Shape
 
 	off vec
@@ -55,7 +59,7 @@ type PhysicsTestGame struct {
 	paused bool
 }
 
-func (p *PhysicsTestGame) Init()  {
+func (p *MultishapeGame) Init()  {
 	p.space = cp.NewSpace()
 	p.space.SetGravity(vec{X: 0, Y: 9.8})
 	p.space.Iterations = 10
@@ -65,24 +69,25 @@ func (p *PhysicsTestGame) Init()  {
 	p.ground = p.space.AddShape(ground)
 	//p.ground.SetElasticity(0.9)
 
-	p.ball = p.space.AddBody(cp.NewBody(mass, moment))
-	p.ball.SetPosition(initialBallPos)
-	p.ball.SetVelocityVector(initialBallVel)
-	ballShape := p.space.AddShape(cp.NewCircle(p.ball, radius, vec{}))
+	p.multi = cp.NewBody(mass, moment)
+	p.multi.SetPosition(initialBallPos)
+	p.multi.SetVelocityVector(initialBallVel)
+	ballShape := p.space.AddShape(cp.NewCircle(p.multi, radius, vec{}))
 	ballShape.SetFriction(0.7)
+	p.space.AddBody(p.multi)
 }
 
-func (p *PhysicsTestGame) Shutdown() {}
+func (p *MultishapeGame) Shutdown() {}
 
-func (p *PhysicsTestGame) Update() error {
+func (p *MultishapeGame) Update() error {
 	switch {
-	case inpututil.IsKeyJustReleased(ebiten.KeyR):
-		helpers.CircleShader = helpers.MustLoadShader("research/public/circle.vert")
+	//case inpututil.IsKeyJustReleased(ebiten.KeyR):
+	//	circleShader = helpers.MustLoadShader("research/public/circle.vert")
 	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
 		p.paused = !p.paused
 	case inpututil.IsKeyJustReleased(ebiten.KeyF):
-		p.ball.SetPosition(initialBallPos)
-		p.ball.SetVelocityVector(initialBallVel)
+		p.multi.SetPosition(initialBallPos)
+		p.multi.SetVelocityVector(initialBallVel)
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
@@ -94,12 +99,10 @@ func (p *PhysicsTestGame) Update() error {
 		}
 		p.last.X, p.last.Y = x, y
 	}
-
 	p.last.Mult(0)
 
 	_, dppm := ebiten.Wheel()
 	PPM += dppm
-
 	if PPM < 1 {
 		PPM = 1
 	}
@@ -111,8 +114,8 @@ func (p *PhysicsTestGame) Update() error {
 	return nil
 }
 
-func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
-	ball := pixelize(p.ball.Position())
+func (p *MultishapeGame) Draw(screen *ebiten.Image) {
+	ball := pixelize(p.multi.Position())
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentTPS(), ball.X, ball.Y))
 
 	a := pixelize(groundA).Add(p.off)
@@ -123,11 +126,11 @@ func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
 
 }
 
-func (p *PhysicsTestGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (p *MultishapeGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }
 
 func main() {
 	ebiten.SetWindowResizable(true)
-	helpers.RunGame(new(PhysicsTestGame))
+	helpers.RunGame(new(MultishapeGame))
 }
