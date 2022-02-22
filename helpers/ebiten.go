@@ -2,10 +2,13 @@ package helpers
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 	"image/color"
 	"io/ioutil"
 	"log"
 )
+
+var CircleShader = MustLoadShader("public/circle.vert")
 
 type ContextGame interface {
 	ebiten.Game
@@ -41,4 +44,21 @@ func MustLoadShader(path string) *ebiten.Shader {
 func Color2Slice(color color.Color) []float32 {
 	r, g, b, a := color.RGBA()
 	return []float32{float32(r) / 0xffff, float32(g) / 0xffff, float32(b) / 0xffff, float32(a) / 0xffff}
+}
+
+func DrawCircle(img *ebiten.Image, pos cp.Vector, r float64, color color.Color) {
+	op := &ebiten.DrawRectShaderOptions{
+		Uniforms: map[string]interface{}{
+			"Radius": float32(r),
+			"Color": Color2Slice(color),
+		},
+	}
+
+	d := int(r * 2)
+	cimg := ebiten.NewImage(d, d)
+	cimg.DrawRectShader(d, d, CircleShader, op)
+
+	op2 := &ebiten.DrawImageOptions{}
+	op2.GeoM.Translate(pos.X - r, pos.Y - r)
+	img.DrawImage(cimg, op2)
 }

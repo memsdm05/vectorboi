@@ -7,7 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
-	"image/color"
 	"vectorboi/helpers"
 )
 
@@ -38,7 +37,7 @@ var (
 
 
 var (
-	circleShader = helpers.MustLoadShader("research/data/circle.vert")
+	circleShader = helpers.MustLoadShader("research/public/circle.vert")
 
 	red = colornames.Red
 	orange = colornames.Orange
@@ -46,23 +45,6 @@ var (
 
 func pixelize(v vec) vec {
 	return v.Mult(PPM)
-}
-
-func drawCircle(img *ebiten.Image, pos vec, r float64, color color.Color) {
-	op := &ebiten.DrawRectShaderOptions{
-		Uniforms: map[string]interface{}{
-			"Radius": float32(r),
-			"Color": helpers.Color2Slice(color),
-		},
-	}
-
-	d := int(r * 2)
-	cimg := ebiten.NewImage(d, d)
-	cimg.DrawRectShader(d, d, circleShader, op)
-
-	op2 := &ebiten.DrawImageOptions{}
-	op2.GeoM.Translate(pos.X - r, pos.Y - r)
-	img.DrawImage(cimg, op2)
 }
 
 type PhysicsTestGame struct {
@@ -98,7 +80,7 @@ func (p *PhysicsTestGame) Shutdown()  {}
 func (p *PhysicsTestGame) Update() error {
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.KeyR):
-		circleShader = helpers.MustLoadShader("research/data/circle.vert")
+		circleShader = helpers.MustLoadShader("research/public/circle.vert")
 	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
 		p.paused = !p.paused
 	case inpututil.IsKeyJustReleased(ebiten.KeyF):
@@ -140,7 +122,7 @@ func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
 	a := pixelize(groundA).Add(p.off)
 	b := pixelize(groundB).Add(p.off)
 	ebitenutil.DrawLine(screen, a.X, a.Y, b.X, b.Y, red)
-	drawCircle(screen, ball.Add(p.off), radius * PPM, orange)
+	helpers.DrawCircle(screen, ball.Add(p.off), radius * PPM, orange)
 	//ebitenutil.DrawRect(screen, ball.X, ball.Y, 10, 10, Red)
 
 }
