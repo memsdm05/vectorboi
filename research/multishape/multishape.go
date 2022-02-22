@@ -82,7 +82,7 @@ func (p *MultishapeGame) Shutdown() {}
 func (p *MultishapeGame) Update() error {
 	switch {
 	//case inpututil.IsKeyJustReleased(ebiten.KeyR):
-	//	circleShader = helpers.MustLoadShader("research/public/circle.vert")
+	//	circleShader = helpers.MustLoadShader("research/public/circle.kage")
 	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
 		p.paused = !p.paused
 	case inpututil.IsKeyJustReleased(ebiten.KeyF):

@@ -8,7 +8,7 @@ import (
 	"log"
 )
 
-var CircleShader = MustLoadShader("public/circle.vert")
+var CircleShader = MustLoadShader("public/circle.kage")
 
 type ContextGame interface {
 	ebiten.Game

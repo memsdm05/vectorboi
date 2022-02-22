@@ -77,7 +77,7 @@ func (p *PhysicsTestGame) Shutdown() {}
 func (p *PhysicsTestGame) Update() error {
 	switch {
 	case inpututil.IsKeyJustReleased(ebiten.KeyR):
-		helpers.CircleShader = helpers.MustLoadShader("research/public/circle.vert")
+		helpers.CircleShader = helpers.MustLoadShader("research/public/circle.kage")
 	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
 		p.paused = !p.paused
 	case inpututil.IsKeyJustReleased(ebiten.KeyF):
