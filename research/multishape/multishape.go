@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
+	"math"
 	"vectorboi/helpers"
 )
 
@@ -18,11 +19,11 @@ const (
 var PPM = float64(10)
 
 
-// ball properties
+// mutli properties
 var (
-	radius = 1.828 / 2
-	mass = 83.9146
-	moment         = cp.MomentForCircle(mass, 0, radius, vec{})
+	num = 20
+	radius = 1.
+	mass = 10.
 	initialBallPos = vec{20, 5}
 	initialBallVel = vec{-2, -1}
 )
@@ -43,11 +44,6 @@ func pixelize(v vec) vec {
 	return v.Mult(PPM)
 }
 
-type MulticircleBody struct {
-	*cp.Body
-	circles []*cp.Circle
-}
-
 type MultishapeGame struct {
 	space *cp.Space
 	multi *cp.Body
@@ -59,35 +55,55 @@ type MultishapeGame struct {
 	paused bool
 }
 
+func addShape(space *cp.Space, body *cp.Body, where vec) {
+	c := space.AddShape(cp.NewCircle(body, radius, where))
+	c.SetMass(mass)
+	c.SetFriction(0.7)
+	//c.SetFilter(cp.ShapeFilter{Group: 1})
+}
+
 func (p *MultishapeGame) Init()  {
 	p.space = cp.NewSpace()
 	p.space.SetGravity(vec{X: 0, Y: 9.8})
-	p.space.Iterations = 10
 
 	ground := cp.NewSegment(p.space.StaticBody, groundA, groundB, 0)
 	ground.SetFriction(1)
 	p.ground = p.space.AddShape(ground)
 	//p.ground.SetElasticity(0.9)
 
-	p.multi = cp.NewBody(mass, moment)
-	p.multi.SetPosition(initialBallPos)
-	p.multi.SetVelocityVector(initialBallVel)
-	ballShape := p.space.AddShape(cp.NewCircle(p.multi, radius, vec{}))
-	ballShape.SetFriction(0.7)
+	// Creates an infinite loop (adding to body then iterating over body's shapes to add to space reads the shape
+	// to the body, cycle continues)
+	//
+	// FIXED: dont iterate over body's shapes in order to add them to space
+
+	p.multi = cp.NewBody(0, 0)
+	//p.multi.SetVelocityVector(initialBallVel)
+
+	fnum := float64(num)
+	for i := float64(0); i < fnum; i++ {
+		addShape(p.space, p.multi, cp.ForAngle(2 * math.Pi / fnum * i).Mult(10))
+	}
+	//addShape(p.space, p.multi, vec{5, 0})
+	//addShape(p.space, p.multi, vec{-5, 0})
+	//addShape(p.space, p.multi, vec{0, -10})
+	//p.multi.AccumulateMassFromShapes()
 	p.space.AddBody(p.multi)
+	p.multi.SetPosition(initialBallPos)
 }
 
 func (p *MultishapeGame) Shutdown() {}
 
 func (p *MultishapeGame) Update() error {
 	switch {
-	//case inpututil.IsKeyJustReleased(ebiten.KeyR):
-	//	circleShader = helpers.MustLoadShader("research/public/circle.kage")
+	case inpututil.IsKeyJustReleased(ebiten.KeyR):
+		helpers.CircleShader = helpers.MustLoadShader("public/circle.kage")
 	case inpututil.IsKeyJustReleased(ebiten.KeySpace):
 		p.paused = !p.paused
 	case inpututil.IsKeyJustReleased(ebiten.KeyF):
 		p.multi.SetPosition(initialBallPos)
 		p.multi.SetVelocityVector(initialBallVel)
+		p.multi.SetAngle(0)
+		//p.multi.SetAngularVelocity(2)
 	}
 
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
@@ -115,13 +131,20 @@ func (p *MultishapeGame) Update() error {
 }
 
 func (p *MultishapeGame) Draw(screen *ebiten.Image) {
-	ball := pixelize(p.multi.Position())
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentTPS(), ball.X, ball.Y))
+	multi := pixelize(p.multi.Position())
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%.5v; %.5v, %.5v", ebiten.CurrentTPS(), multi.X, multi.Y))
 
 	a := pixelize(groundA).Add(p.off)
 	b := pixelize(groundB).Add(p.off)
 	ebitenutil.DrawLine(screen, a.X, a.Y, b.X, b.Y, red)
-	helpers.DrawCircle(screen, ball.Add(p.off), radius * PPM, orange)
+	p.multi.EachShape(func(shape *cp.Shape) {
+		helpers.DrawCircle(
+			screen,
+			pixelize(shape.Class.(*cp.Circle).TransformC()).Add(p.off),
+			radius * PPM,
+			orange)
+	})
+	//helpers.DrawCircle(screen, multi.Add(p.off), radius * PPM, orange)
 	//ebitenutil.DrawRect(screen, ball.X, ball.Y, 10, 10, Red)
 
 }

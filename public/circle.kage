@@ -10,6 +10,6 @@ func Fragment(pos vec4, texCoord vec2, color vec4) vec4 {
         return Color
     } else {
         // return vec4(1, 1, 0, 1)
-        return vec4(0)
+        return vec4(0.)
     }
 }
