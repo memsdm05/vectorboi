@@ -115,7 +115,7 @@ func (p *MultishapeGame) Update() error {
 		}
 		p.last.X, p.last.Y = x, y
 	}
-	p.last.Mult(0)
+	//p.last.Mult(0)
 
 	_, dppm := ebiten.Wheel()
 	PPM += dppm
