@@ -1,0 +1,15 @@
+package main
+
+var Side float
+
+func Fragment(pos vec4, tex vec2, color vec4) vec4 {
+    st := pos.xy / vec2(Side)
+    return vec4(st, 0, 1)
+    // dist := distance(st, vec2(0.5))
+
+    // if dist < 0.5 {
+    //     return vec4(dist, dist, dist, 1)
+    // } else {
+    //     return vec4(0)
+    // }
+}
