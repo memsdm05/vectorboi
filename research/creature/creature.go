@@ -89,9 +89,8 @@ func (n *Node) measureDepth(depth rune, counter []int) {
 		return
 	}
 
-	intdepth := int(depth - 'A')
 	if !n.Root() && n.Leaf() {
-		counter[intdepth]++
+		counter[depth - 'A']++
 	}
 
 	for _, child := range n.Children {
