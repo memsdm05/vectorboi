@@ -26,8 +26,7 @@ type Creature struct {
 
 func NewRandomCreature(num int) *Creature {
 	ret := &Creature{Body: NewRandomNode()}
-	all := make([]*Node, 1)
-	all[0] = ret.Body
+	all := []*Node{ret.Body}
 
 	for i := 0; i < num; i++ {
 		adder: for {
