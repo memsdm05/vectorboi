@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"golang.org/x/image/colornames"
 	"io/ioutil"
 	"log"
 	"vectorboi/helpers"
@@ -50,10 +51,15 @@ func (c *CircleGame) Draw(screen *ebiten.Image) {
 		return
 	}
 
-	op := &ebiten.DrawRectShaderOptions{}
-	op.Uniforms["Side"] = float32(SideLength)
-	w, h := screen.Size()
-	screen.DrawRectShader(w, h, c.shader, op)
+	op := &ebiten.DrawRectShaderOptions{
+		Uniforms: map[string]interface{}{
+			"Side": float32(SideLength),
+			"Color": helpers.Color2Slice(colornames.Red),
+		},
+	}
+
+	//w, h := screen.Size()
+	screen.DrawRectShader(SideLength, SideLength, c.shader, op)
 }
 
 func (c CircleGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -61,6 +67,6 @@ func (c CircleGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screen
 }
 
 func main() {
-	ebiten.SetWindowSize(SideLength, SideLength)
+	ebiten.SetWindowSize(400, 400)
 	helpers.RunGame(new(CircleGame))
 }

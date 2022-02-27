@@ -33,8 +33,6 @@ var (
 	groundB = vec{X: 40, Y: 40}
 )
 
-
-
 var (
 	red = colornames.Red
 	orange = colornames.Orange

@@ -11,9 +11,9 @@ import (
 var CircleShader = MustLoadShader("public/circle.kage")
 
 type ContextGame interface {
-	ebiten.Game
 	Init()
 	Shutdown()
+	ebiten.Game
 }
 
 func RunGame(game ContextGame) {

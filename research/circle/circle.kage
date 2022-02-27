@@ -1,15 +1,37 @@
 package main
 
 var Side float
+var Color vec4
+
+func Yeet(x float) vec4 {
+    st := x / Side
+    dist := distance(st, 0.5)
+    thing := fwidth(10)
+    return vec4(mix(1, 0, dist))
+}
+
 
 func Fragment(pos vec4, tex vec2, color vec4) vec4 {
-    st := pos.xy / vec2(Side)
-    return vec4(st, 0, 1)
-    // dist := distance(st, vec2(0.5))
+    size := imageSrcTextureSize()
+    if floor(pos.x) == floor(size.x + 1) {
+        return vec4(1, 0, 0, 1)
+    }
 
-    // if dist < 0.5 {
-    //     return vec4(dist, dist, dist, 1)
-    // } else {
-    //     return vec4(0)
-    // }
+    if floor(pos.x) == Side {
+        return vec4(0, 1, 0, 1)
+    }
+
+    if floor(mod(pos.x, 10)) == 0 {
+        return Yeet(pos.x)
+    } else {
+        return vec4(0)
+    }
+
+
+    cutoff := 0.497
+
+    st := pos.xy / vec2(Side + 3)
+    dist := distance(st, vec2(0.5))
+    alpha := smoothstep(cutoff - fwidth(dist), cutoff, dist)
+    return mix(Color, vec4(0), alpha)
 }
