@@ -15,7 +15,7 @@ type CircleGame struct {
 	shader *ebiten.Shader
 }
 
-func (c *CircleGame) reload()  {
+func (c *CircleGame) reload() {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err)
@@ -35,7 +35,7 @@ func (c *CircleGame) reload()  {
 	c.shader = s
 }
 
-func (c *CircleGame) Init() { c.reload() }
+func (c *CircleGame) Init()     { c.reload() }
 func (c *CircleGame) Shutdown() {}
 
 func (c *CircleGame) Update() error {
@@ -53,7 +53,7 @@ func (c *CircleGame) Draw(screen *ebiten.Image) {
 
 	op := &ebiten.DrawRectShaderOptions{
 		Uniforms: map[string]interface{}{
-			"Side": float32(SideLength),
+			"Side":  float32(SideLength),
 			"Color": helpers.Color2Slice(colornames.Red),
 		},
 	}

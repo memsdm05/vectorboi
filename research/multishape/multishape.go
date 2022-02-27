@@ -12,18 +12,18 @@ import (
 )
 
 type vec = cp.Vector
+
 const (
 	TimeStep = 1. / 60
 )
 
 var PPM = float64(10)
 
-
 // mutli properties
 var (
-	num = 20
-	radius = 1.
-	mass = 10.
+	num            = 20
+	radius         = 1.
+	mass           = 10.
 	initialBallPos = vec{20, 5}
 	initialBallVel = vec{-2, -1}
 )
@@ -34,9 +34,8 @@ var (
 	groundB = vec{X: 40, Y: 40}
 )
 
-
 var (
-	red = colornames.Red
+	red    = colornames.Red
 	orange = colornames.Orange
 )
 
@@ -45,11 +44,11 @@ func pixelize(v vec) vec {
 }
 
 type MultishapeGame struct {
-	space *cp.Space
-	multi *cp.Body
+	space  *cp.Space
+	multi  *cp.Body
 	ground *cp.Shape
 
-	off vec
+	off  vec
 	last vec
 
 	paused bool
@@ -62,7 +61,7 @@ func addShape(space *cp.Space, body *cp.Body, where vec) {
 	//c.SetFilter(cp.ShapeFilter{Group: 1})
 }
 
-func (p *MultishapeGame) Init()  {
+func (p *MultishapeGame) Init() {
 	p.space = cp.NewSpace()
 	p.space.SetGravity(vec{X: 0, Y: 9.8})
 
@@ -81,7 +80,7 @@ func (p *MultishapeGame) Init()  {
 
 	fnum := float64(num)
 	for i := float64(0); i < fnum; i++ {
-		addShape(p.space, p.multi, cp.ForAngle(2 * math.Pi / fnum * i).Mult(10))
+		addShape(p.space, p.multi, cp.ForAngle(2*math.Pi/fnum*i).Mult(10))
 	}
 	//addShape(p.space, p.multi, vec{5, 0})
 	//addShape(p.space, p.multi, vec{-5, 0})
@@ -141,7 +140,7 @@ func (p *MultishapeGame) Draw(screen *ebiten.Image) {
 		helpers.DrawCircle(
 			screen,
 			pixelize(shape.Class.(*cp.Circle).TransformC()).Add(p.off),
-			radius * PPM,
+			radius*PPM,
 			orange)
 	})
 	//helpers.DrawCircle(screen, multi.Add(p.off), radius * PPM, orange)

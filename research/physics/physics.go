@@ -11,17 +11,17 @@ import (
 )
 
 type vec = cp.Vector
+
 const (
 	TimeStep = 1. / 60
 )
 
 var PPM = float64(10)
 
-
 // ball properties
 var (
-	radius = 1.828 / 2
-	mass = 83.9146
+	radius         = 1.828 / 2
+	mass           = 83.9146
 	moment         = cp.MomentForCircle(mass, 0, radius, vec{})
 	initialBallPos = vec{20, 5}
 	initialBallVel = vec{-2, -1}
@@ -34,7 +34,7 @@ var (
 )
 
 var (
-	red = colornames.Red
+	red    = colornames.Red
 	orange = colornames.Orange
 )
 
@@ -43,17 +43,17 @@ func pixelize(v vec) vec {
 }
 
 type PhysicsTestGame struct {
-	space *cp.Space
-	ball *cp.Body
+	space  *cp.Space
+	ball   *cp.Body
 	ground *cp.Shape
 
-	off vec
+	off  vec
 	last vec
 
 	paused bool
 }
 
-func (p *PhysicsTestGame) Init()  {
+func (p *PhysicsTestGame) Init() {
 	p.space = cp.NewSpace()
 	p.space.SetGravity(vec{X: 0, Y: 9.8})
 	p.space.Iterations = 10
@@ -116,7 +116,7 @@ func (p *PhysicsTestGame) Draw(screen *ebiten.Image) {
 	a := pixelize(groundA).Add(p.off)
 	b := pixelize(groundB).Add(p.off)
 	ebitenutil.DrawLine(screen, a.X, a.Y, b.X, b.Y, red)
-	helpers.DrawCircle(screen, ball.Add(p.off), radius * PPM, orange)
+	helpers.DrawCircle(screen, ball.Add(p.off), radius*PPM, orange)
 	//ebitenutil.DrawRect(screen, ball.X, ball.Y, 10, 10, Red)
 
 }

@@ -17,7 +17,7 @@ import (
 
 var (
 	mainCreature *Creature
-	NumNodes = 3
+	NumNodes     = 3
 )
 
 type Creature struct {
@@ -29,7 +29,8 @@ func NewRandomCreature(num int) *Creature {
 	all := []*Node{ret.Body}
 
 	for i := 0; i < num; i++ {
-		adder: for {
+	adder:
+		for {
 			node := NewRandomNode()
 			node.Parent = all[rand.Intn(len(all))]
 
@@ -49,18 +50,18 @@ func NewRandomCreature(num int) *Creature {
 }
 
 type Node struct {
-	Parent *Node
-	Children []*Node
+	Parent    *Node
+	Children  []*Node
 	Thrusters []Thruster
-	Angle float64
-	Radius float64
+	Angle     float64
+	Radius    float64
 }
 
 func NewRandomNode() *Node {
-	return &Node {
-		Children:      make([]*Node, 0),
-		Angle:         rand.Float64() * 2 * math.Pi,
-		Radius:        10 + rand.Float64() * 10,
+	return &Node{
+		Children: make([]*Node, 0),
+		Angle:    rand.Float64() * 2 * math.Pi,
+		Radius:   10 + rand.Float64()*10,
 	}
 }
 
@@ -70,7 +71,7 @@ func (n *Node) String() string {
 	}
 
 	counter := make([]int, 26, 26)
-	n.measureDepth('A' - 1, counter)
+	n.measureDepth('A'-1, counter)
 
 	var sb strings.Builder
 	for i, count := range counter {
@@ -89,15 +90,15 @@ func (n *Node) measureDepth(depth rune, counter []int) {
 	}
 
 	if !n.Root() && n.Leaf() {
-		counter[depth - 'A']++
+		counter[depth-'A']++
 	}
 
 	for _, child := range n.Children {
-		child.measureDepth(depth + 1, counter)
+		child.measureDepth(depth+1, counter)
 	}
 }
 
-func (n *Node) Do(f func(n *Node))  {
+func (n *Node) Do(f func(n *Node)) {
 	f(n)
 	for _, child := range n.Children {
 		child.Do(f)
@@ -120,7 +121,7 @@ func (n *Node) Intersects(other *Node) bool {
 	if n.Parent == other {
 		return false
 	}
-	return n.Position().Near(other.Position(), n.Radius*2 + other.Radius)
+	return n.Position().Near(other.Position(), n.Radius*2+other.Radius)
 }
 
 func (n *Node) Attach(child *Node) {
@@ -146,7 +147,7 @@ func (t *Thruster) Power(throttle float64) cp.Vector {
 	return cp.ForAngle(t.Direction).Mult(throttle * t.MaxThrust)
 }
 
-type CreatureViewGame struct {}
+type CreatureViewGame struct{}
 
 func reload() {
 	rand.Seed(time.Now().UnixNano())
@@ -184,7 +185,6 @@ func (c CreatureViewGame) Draw(screen *ebiten.Image) {
 		Y: float64(h) / 2,
 	}
 
-
 	mainCreature.Body.Do(func(node *Node) {
 		var c color.Color
 		if node.Root() {
@@ -192,7 +192,7 @@ func (c CreatureViewGame) Draw(screen *ebiten.Image) {
 		} else {
 			c = colornames.Whitesmoke
 		}
-		helpers.DrawCircle(screen, node.Position().Add(offset), node.Radius + 1.2, c)
+		helpers.DrawCircle(screen, node.Position().Add(offset), node.Radius+1.2, c)
 	})
 
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("num: %v, %s", NumNodes, mainCreature.Body))

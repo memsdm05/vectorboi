@@ -50,7 +50,7 @@ func DrawCircle(img *ebiten.Image, pos cp.Vector, r float64, color color.Color) 
 	op := &ebiten.DrawRectShaderOptions{
 		Uniforms: map[string]interface{}{
 			"Radius": float32(r),
-			"Color": Color2Slice(color),
+			"Color":  Color2Slice(color),
 		},
 	}
 
@@ -59,6 +59,6 @@ func DrawCircle(img *ebiten.Image, pos cp.Vector, r float64, color color.Color) 
 	cimg.DrawRectShader(d, d, CircleShader, op)
 
 	op2 := &ebiten.DrawImageOptions{}
-	op2.GeoM.Translate(pos.X - r, pos.Y - r)
+	op2.GeoM.Translate(pos.X-r, pos.Y-r)
 	img.DrawImage(cimg, op2)
 }
