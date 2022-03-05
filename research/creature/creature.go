@@ -129,6 +129,18 @@ func (n *Node) Attach(child *Node) {
 	child.Parent = n
 }
 
+func (n *Node) Detach()  {
+	pc := n.Parent.Children
+	for i := len(pc); i >= 0; i-- {
+		if pc[i] == n {
+			last := pc[len(pc) - 1]
+			pc[i], last = last, nil
+			break
+		}
+	}
+	n.Parent = nil
+}
+
 func (n *Node) Position() cp.Vector {
 	if n.Root() {
 		return cp.Vector{}

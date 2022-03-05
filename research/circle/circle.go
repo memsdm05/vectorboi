@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
 	"io/ioutil"
 	"log"
@@ -13,6 +13,7 @@ const SideLength = 400
 
 type CircleGame struct {
 	shader *ebiten.Shader
+	middle cp.Vector
 }
 
 func (c *CircleGame) reload() {
@@ -35,31 +36,39 @@ func (c *CircleGame) reload() {
 	c.shader = s
 }
 
-func (c *CircleGame) Init()     { c.reload() }
+func (c *CircleGame) Init()     {
+	/* c.reload() */
+	c.middle = cp.Vector{SideLength / 2, SideLength / 2}
+}
 func (c *CircleGame) Shutdown() {}
 
 func (c *CircleGame) Update() error {
-	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+	/* if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		c.reload()
-	}
+	} */
 
 	return nil
 }
 
 func (c *CircleGame) Draw(screen *ebiten.Image) {
-	if c.shader == nil {
-		return
-	}
+	x, y := ebiten.CursorPosition()
+	mouse := cp.Vector{float64(x), float64(y)}
+	//radius := c.middle.Distance(mouse)
+	helpers.DrawCircle(screen, c.middle, c.middle.Sub(mouse).Clamp(SideLength / 2).Length(), colornames.Red)
 
-	op := &ebiten.DrawRectShaderOptions{
-		Uniforms: map[string]interface{}{
-			"Side":  float32(SideLength),
-			"Color": helpers.Color2Slice(colornames.Red),
-		},
-	}
-
-	//w, h := screen.Size()
-	screen.DrawRectShader(SideLength, SideLength, c.shader, op)
+	//if c.shader == nil {
+	//	return
+	//}
+	//
+	//op := &ebiten.DrawRectShaderOptions{
+	//	Uniforms: map[string]interface{}{
+	//		"Side":  float32(SideLength),
+	//		"Color": helpers.Color2Slice(colornames.Red),
+	//	},
+	//}
+	//
+	////w, h := screen.Size()
+	//screen.DrawRectShader(SideLength, SideLength, c.shader, op)
 }
 
 func (c CircleGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
