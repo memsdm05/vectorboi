@@ -1,15 +1,18 @@
 package main
 
-var Radius float
 var Color vec4
 
-func Fragment(pos vec4, tex vec2, color vec4) vec4 {
-    dist := distance(pos.xy, vec2(Radius + 1))
+func Fragment(position vec4, tex vec2, color vec4) vec4 {
+    cutoff := 0.5
 
-    if dist < Radius - 1 {
-        return Color
-    } else {
-        // return vec4(1, 1, 0, 1)
-        return vec4(0)
-    }
+    // thx ebiten example shader
+    pos := position.xy / imageDstTextureSize()
+	origin, size := imageDstRegionOnTexture()
+	pos -= origin
+	pos /= size
+
+    dist := distance(pos, vec2(0.5))
+    delta := fwidth(dist);
+    alpha := smoothstep(cutoff - delta, cutoff, dist)
+    return mix(Color, vec4(0), alpha)
 }

@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"io/ioutil"
 	"log"
+	"math"
 )
 
 var CircleShader = MustLoadShader("public/circle.kage")
@@ -46,19 +47,18 @@ func Color2Slice(color color.Color) []float32 {
 	return []float32{float32(r) / 0xffff, float32(g) / 0xffff, float32(b) / 0xffff, float32(a) / 0xffff}
 }
 
-func DrawCircle(img *ebiten.Image, pos cp.Vector, r float64, color color.Color) {
-	op := &ebiten.DrawRectShaderOptions{
+func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color)  {
+	side := int(math.Ceil(radius) * 2)
+	halfside := float64(side / 2)
+
+	temp := ebiten.NewImage(side, side)
+	temp.DrawRectShader(side, side, CircleShader, &ebiten.DrawRectShaderOptions{
 		Uniforms: map[string]interface{}{
-			"Radius": float32(r),
-			"Color":  Color2Slice(color),
+			"Color": Color2Slice(color),
 		},
-	}
+	})
 
-	d := int(r * 2)
-	cimg := ebiten.NewImage(d, d)
-	cimg.DrawRectShader(d, d, CircleShader, op)
-
-	op2 := &ebiten.DrawImageOptions{}
-	op2.GeoM.Translate(pos.X-r, pos.Y-r)
-	img.DrawImage(cimg, op2)
+	geom := ebiten.GeoM{}
+	geom.Translate(pos.X - halfside, pos.Y - halfside)
+	dst.DrawImage(temp, &ebiten.DrawImageOptions{GeoM: geom})
 }

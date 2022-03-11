@@ -4,11 +4,14 @@ var Side float
 var Color vec4
 
 
-func Fragment(pos vec4, tex vec2, color vec4) vec4 {
-    cutoff := 0.491
+func Fragment(position vec4, tex vec2, color vec4) vec4 {
+    cutoff := 0.5
+    pos := position.xy / imageDstTextureSize()
+	origin, size := imageDstRegionOnTexture()
+	pos -= origin
+	pos /= size
 
-    st := pos.xy / vec2(Side)
-    dist := distance(st, vec2(0.5))
+    dist := distance(pos, vec2(0.5))
     delta := fwidth(dist);
     alpha := smoothstep(cutoff - delta, cutoff, dist)
     return mix(Color, vec4(0), alpha)
