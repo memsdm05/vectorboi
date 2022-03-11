@@ -2,6 +2,7 @@ package creature
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/jakecoffman/cp"
 	"math/rand"
 )
 
@@ -48,6 +49,16 @@ func (c *Creature) randomBodyNode() *Node {
 func (c *Creature) Draw(dst *ebiten.Image)  {
 }
 
-//func CreatePhysicsBody(space cp.Space) *cp.Body {
-//	cbody := cp.NewBody()
-//}
+func (c *Creature) CreatePhysicsBody(space *cp.Space) *cp.Body {
+	cbody := space.AddBody(cp.NewBody(0, 0))
+	cbody.UserData = c
+
+	c.root().Do(func(n *Node) {
+		nshape := space.AddShape(cp.NewCircle(cbody, n.Radius, n.Position()))
+		nshape.UserData = n
+		nshape.SetDensity(1)
+		nshape.SetFriction(0.5)
+	})
+
+	return cbody
+}

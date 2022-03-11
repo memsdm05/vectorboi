@@ -47,18 +47,26 @@ func Color2Slice(color color.Color) []float32 {
 	return []float32{float32(r) / 0xffff, float32(g) / 0xffff, float32(b) / 0xffff, float32(a) / 0xffff}
 }
 
-func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color)  {
+func CircleImage(radius float64, color color.Color) *ebiten.Image {
 	side := int(math.Ceil(radius) * 2)
-	halfside := float64(side / 2)
 
-	temp := ebiten.NewImage(side, side)
-	temp.DrawRectShader(side, side, CircleShader, &ebiten.DrawRectShaderOptions{
+	circle := ebiten.NewImage(side, side)
+	circle.DrawRectShader(side, side, CircleShader, &ebiten.DrawRectShaderOptions{
 		Uniforms: map[string]interface{}{
 			"Color": Color2Slice(color),
 		},
 	})
 
-	geom := ebiten.GeoM{}
-	geom.Translate(pos.X - halfside, pos.Y - halfside)
-	dst.DrawImage(temp, &ebiten.DrawImageOptions{GeoM: geom})
+	return circle
+}
+
+// Kill me now
+func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color)  {
+	side := int(math.Ceil(radius) * 2)
+	halfside := float64(side / 2)
+	op := &ebiten.DrawImageOptions{}
+
+	op.GeoM.Translate(pos.X - halfside, pos.Y - halfside)
+
+	dst.DrawImage(CircleImage(radius, color), op)
 }

@@ -2,10 +2,13 @@ package creature
 
 import (
 	"fmt"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
+	"golang.org/x/image/colornames"
 	"math"
 	"math/rand"
 	"strings"
+	"vectorboi/helpers"
 )
 
 type Node struct {
@@ -17,6 +20,13 @@ type Node struct {
 
 	cachedPos cp.Vector
 	cachedDepth int
+}
+
+func (n *Node) Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
+	if n.Root() {
+		return helpers.CircleImage(n.Radius * zoom, colornames.Red), nil
+	}
+	return helpers.CircleImage(n.Radius * zoom, colornames.White), nil
 }
 
 func NewRandomNode() *Node {

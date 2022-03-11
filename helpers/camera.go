@@ -7,37 +7,74 @@ import (
 
 
 type CameraObject interface {
-	ScaleMe() bool
-	Draw(zoom float64) *ebiten.Image
+	Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions)
 }
 
-// Camera
+// Camera does things
 type Camera struct {
-	pos cp.Vector
+	frustum cp.BB
+	pos     cp.Vector
 	zoom float64
+
+	minzoom float64
+	maxzoom float64
 }
 
-func (c *Camera) SetZoom()  {
-	
+func (c *Camera) SetZoom(zoom float64)  {
+	if zoom < c.minzoom {
+		zoom = c.minzoom
+	}
+	if zoom > c.maxzoom {
+		zoom = c.maxzoom
+	}
+
+	c.zoom = zoom
 }
+
+//func (c *Camera) ToScreenPos(global cp.Vector) cp.Vector {
+//	return global.Mult(c.zoom).Add(c.pos)
+//}
+//
+//func (c *Camera) ToGlobalPos(screen cp.Vector) cp.Vector {
+//
+//}
 
 func (c *Camera) drawEach(shape *cp.Shape, data interface{}) {
 	dst := data.(*ebiten.Image)
+	shapePos := shape.BB().Center()
+
+	// make sure that the shape's UserData is a camera object
 	if co, ok := shape.UserData.(CameraObject); ok {
-		op := &ebiten.DrawImageOptions{}
-		if co.ScaleMe() {
-			op.GeoM.Scale(c.zoom, c.zoom)
+		img, op := co.Draw(c.zoom)
+
+		if op == nil {
+			op = &ebiten.DrawImageOptions{}
 		}
-		dst.DrawImage(co.Draw(c.zoom), op)
+
+		op.GeoM.Translate(shapePos.X, shapePos.Y) // todo translate by screen coordinates
+		dst.DrawImage(img, op)
 	}
 }
 
-func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) error {
-	w, h := dst.Size()
-	frustrum := cp.NewBBForExtents(c.pos,
-		float64(w) / 2 * c.zoom,
-		float64(h) / 2 * c.zoom)
+/*
+BB{
+		L: c.X - hw,
+		B: c.Y - hh,
+		R: c.X + hw,
+		T: c.Y + hh,
+	}
+ */
 
-	space.BBQuery(frustrum, cp.SHAPE_FILTER_ALL, c.drawEach, dst)
+func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) error {
+	// resize frustum
+	w, h := dst.Size()
+	hw, hh := float64(w) / 2 * c.zoom, float64(h) / 2 * c.zoom
+	c.frustum.L = c.pos.X - hw
+	c.frustum.B = c.pos.Y - hh
+	c.frustum.R = c.pos.X + hw
+	c.frustum.T = c.pos.Y + hh
+
+	// draw each shape within frustum
+	space.BBQuery(c.frustum, cp.SHAPE_FILTER_ALL, c.drawEach, dst)
 	return nil
 }
