@@ -1,7 +1,8 @@
 TODO
 
-[ ] - Simple
+[~] - Simple
     [ ] - Physics / Structure
+        [ ] - Physics Object
         [ ] - Finalize Creature design
         [ ] - Thruster dynamics
         [ ] - Sensor Raycasting (?) (consider doing this for advanced)
@@ -9,7 +10,8 @@ TODO
     [ ] - Genetics
         [ ] - TODO
     [~] - Graphics (?)
-        [~] - Draw Circle working well, god dammit
-        [ ] - TODO
+        [x] - Draw Circle working well, god dammit
+        [ ] - Camera
 [ ] - Advanced
     [ ] - TODO
+
