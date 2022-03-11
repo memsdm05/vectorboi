@@ -1,0 +1,15 @@
+TODO
+
+[ ] - Simple
+    [ ] - Physics / Structure
+        [ ] - Finalize Creature design
+        [ ] - Thruster dynamics
+        [ ] - Sensor Raycasting (?) (consider doing this for advanced)
+        [ ] - Optimize node collision detection (currently monte carlo, maybe have it hashed?)
+    [ ] - Genetics
+        [ ] - TODO
+    [~] - Graphics (?)
+        [~] - Draw Circle working well, god dammit
+        [ ] - TODO
+[ ] - Advanced
+    [ ] - TODO
