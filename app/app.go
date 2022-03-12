@@ -9,36 +9,48 @@ import (
 
 const TimeStep = 1 / 60.
 
-type SimpleGame struct {
+type Game struct {
 	camera *helpers.Camera
-
 	space *cp.Space
 	testCreature *creature.Creature
 }
 
-func (s *SimpleGame) Init() {
-	ebiten.SetWindowTitle("vectorboi")
-	ebiten.SetWindowResizable(false)
-	ebiten.SetWindowSize(1920, 1080)
+func (g *Game) Init() {
+	g.camera = helpers.NewCamera()
+	g.camera.Position.X = -30
+	g.camera.Position.Y = -10
+	g.camera.SetZoom(0.8)
 
-	s.space = cp.NewSpace()
-	s.testCreature = creature.NewRandomCreature(5)
-	s.testCreature.CreatePhysicsBody(s.space)
+	g.space = cp.NewSpace()
+	g.testCreature = creature.NewRandomCreature(5)
+	g.testCreature.CreatePhysicsBody(g.space)
 }
 
-func (s *SimpleGame) Shutdown() {}
+func (g *Game) Shutdown() {}
 
-func (s *SimpleGame) Update() error {
-	s.space.Step(TimeStep)
+func (g *Game) Update() error {
+	switch {
+	case ebiten.IsKeyPressed(ebiten.KeyUp):
+		g.camera.Position.Y -= 1
+	case ebiten.IsKeyPressed(ebiten.KeyDown):
+		g.camera.Position.Y += 1
+	case ebiten.IsKeyPressed(ebiten.KeyLeft):
+		g.camera.Position.X -= 1
+	case ebiten.IsKeyPressed(ebiten.KeyRight):
+		g.camera.Position.X += 1
+	}
+
+	_, ywheel := ebiten.Wheel()
+	g.camera.Scale += ywheel / 100
+
+	//g.space.Step(TimeStep)
 	return nil
 }
 
-func (s *SimpleGame) Draw(screen *ebiten.Image) {
-	s.space.EachShape(func(shape *cp.Shape) {
-		screen.DrawImage(shape.UserData.(helpers.CameraObject).Draw(1))
-	})
+func (g *Game) Draw(screen *ebiten.Image) {
+	g.camera.Render(screen, g.space)
 }
 
-func (s *SimpleGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return outsideWidth, outsideHeight
 }

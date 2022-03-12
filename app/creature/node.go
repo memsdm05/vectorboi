@@ -22,6 +22,10 @@ type Node struct {
 	cachedDepth int
 }
 
+func (n *Node) ScaleMe() bool {
+	return false
+}
+
 func (n *Node) Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	if n.Root() {
 		return helpers.CircleImage(n.Radius * zoom, colornames.Red), nil

@@ -1,23 +1,36 @@
 package helpers
 
 import (
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
 )
 
 
 type CameraObject interface {
+	ScaleMe() bool
 	Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions)
 }
 
 // Camera does things
 type Camera struct {
-	frustum cp.BB
-	pos     cp.Vector
-	zoom float64
+	Position cp.Vector
+	Scale     float64
+	frustum  cp.BB
 
 	minzoom float64
 	maxzoom float64
+
+	count int
+}
+
+func NewCamera() *Camera {
+	return &Camera{
+		Scale:    1,
+		minzoom: 0.01,
+		maxzoom: 10,
+	}
 }
 
 func (c *Camera) SetZoom(zoom float64)  {
@@ -28,32 +41,37 @@ func (c *Camera) SetZoom(zoom float64)  {
 		zoom = c.maxzoom
 	}
 
-	c.zoom = zoom
+	c.Scale = 1 / zoom
 }
 
-//func (c *Camera) ToScreenPos(global cp.Vector) cp.Vector {
-//	return global.Mult(c.zoom).Add(c.pos)
-//}
-//
-//func (c *Camera) ToGlobalPos(screen cp.Vector) cp.Vector {
-//
-//}
+func (c *Camera) ToScreen(global cp.Vector) cp.Vector {
+	return global.Mult(c.Scale).Sub(c.Position)
+}
+
+func (c *Camera) ToGlobal(screen cp.Vector) cp.Vector {
+	return cp.Vector{}
+}
 
 func (c *Camera) drawEach(shape *cp.Shape, data interface{}) {
 	dst := data.(*ebiten.Image)
-	shapePos := shape.BB().Center()
+	spos := c.ToScreen(shape.BB().Center())
 
 	// make sure that the shape's UserData is a camera object
 	if co, ok := shape.UserData.(CameraObject); ok {
-		img, op := co.Draw(c.zoom)
+		img, op := co.Draw(c.Scale)
 
 		if op == nil {
 			op = &ebiten.DrawImageOptions{}
 		}
 
-		op.GeoM.Translate(shapePos.X, shapePos.Y) // todo translate by screen coordinates
+		w, h := img.Size()
+		op.GeoM.Translate(-float64(w) / 2, -float64(h) / 2)
+		op.GeoM.Translate(spos.X, spos.Y) // todo translate by screen coordinates
+		if co.ScaleMe() { op.GeoM.Scale(c.Scale, c.Scale) }
 		dst.DrawImage(img, op)
 	}
+
+	c.count++
 }
 
 /*
@@ -65,16 +83,22 @@ BB{
 	}
  */
 
-func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) error {
+func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) {
 	// resize frustum
 	w, h := dst.Size()
-	hw, hh := float64(w) / 2 * c.zoom, float64(h) / 2 * c.zoom
-	c.frustum.L = c.pos.X - hw
-	c.frustum.B = c.pos.Y - hh
-	c.frustum.R = c.pos.X + hw
-	c.frustum.T = c.pos.Y + hh
+	hw, hh := float64(w) / 2 * c.Scale, float64(h) / 2 * c.Scale
+	c.frustum.L = c.Position.X - hw
+	c.frustum.B = c.Position.Y - hh
+	c.frustum.R = c.Position.X + hw
+	c.frustum.T = c.Position.Y + hh
+
+	c.count = 0
 
 	// draw each shape within frustum
 	space.BBQuery(c.frustum, cp.SHAPE_FILTER_ALL, c.drawEach, dst)
-	return nil
+
+	msg := fmt.Sprintf(`TPS: %0.2f
+FPS: %0.2f
+Num of sprites: %d`, ebiten.CurrentTPS(), ebiten.CurrentFPS(), c.count)
+	ebitenutil.DebugPrint(dst, msg)
 }
