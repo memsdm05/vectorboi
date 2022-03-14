@@ -15,9 +15,10 @@ func irange(a, b int) int {
 }
 
 type Dot struct {
-	body  *cp.Body
-	moves []cp.Vector
-	dead  bool
+	body    *cp.Body
+	moves   []cp.Vector
+	dead    bool
+	fitness float64
 }
 
 func NewRandomDot() *Dot {
