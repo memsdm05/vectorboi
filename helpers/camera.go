@@ -7,7 +7,6 @@ import (
 	"github.com/jakecoffman/cp"
 )
 
-
 type CameraObject interface {
 	ScaleMe() bool
 	Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions)
@@ -16,7 +15,7 @@ type CameraObject interface {
 // Camera does things
 type Camera struct {
 	Position cp.Vector
-	Scale     float64
+	Scale    float64
 	frustum  cp.BB
 
 	minzoom float64
@@ -27,13 +26,13 @@ type Camera struct {
 
 func NewCamera() *Camera {
 	return &Camera{
-		Scale:    1,
+		Scale:   1,
 		minzoom: 0.01,
 		maxzoom: 10,
 	}
 }
 
-func (c *Camera) SetZoom(zoom float64)  {
+func (c *Camera) SetZoom(zoom float64) {
 	if zoom < c.minzoom {
 		zoom = c.minzoom
 	}
@@ -65,9 +64,11 @@ func (c *Camera) drawEach(shape *cp.Shape, data interface{}) {
 		}
 
 		w, h := img.Size()
-		op.GeoM.Translate(-float64(w) / 2, -float64(h) / 2)
+		op.GeoM.Translate(-float64(w)/2, -float64(h)/2)
 		op.GeoM.Translate(spos.X, spos.Y) // todo translate by screen coordinates
-		if co.ScaleMe() { op.GeoM.Scale(c.Scale, c.Scale) }
+		if co.ScaleMe() {
+			op.GeoM.Scale(c.Scale, c.Scale)
+		}
 		dst.DrawImage(img, op)
 	}
 
@@ -81,12 +82,12 @@ BB{
 		R: c.X + hw,
 		T: c.Y + hh,
 	}
- */
+*/
 
 func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) {
 	// resize frustum
 	w, h := dst.Size()
-	hw, hh := (float64(w) / 2) * c.Scale, (float64(h) / 2) * c.Scale
+	hw, hh := (float64(w)/2)*c.Scale, (float64(h)/2)*c.Scale
 	c.frustum.L = c.Position.X - hw
 	c.frustum.B = c.Position.Y - hh
 	c.frustum.R = c.Position.X + hw

@@ -48,7 +48,7 @@ func (c *CircleGame) reload() {
 	Shader = s
 }
 
-func (c *CircleGame) Init()     {
+func (c *CircleGame) Init() {
 	c.reload()
 	c.middle = cp.Vector{200, 200}
 }
@@ -73,7 +73,7 @@ func (c *CircleGame) Update() error {
 	return nil
 }
 
-func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color)  {
+func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color) {
 	side := int(math.Ceil(radius) * 2)
 	halfside := float64(side / 2)
 
@@ -85,7 +85,7 @@ func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Co
 	})
 
 	geom := ebiten.GeoM{}
-	geom.Translate(pos.X - halfside + shiftx, pos.Y - halfside + shifty)
+	geom.Translate(pos.X-halfside+shiftx, pos.Y-halfside+shifty)
 	dst.DrawImage(temp, &ebiten.DrawImageOptions{GeoM: geom})
 }
 
@@ -99,8 +99,8 @@ func (c *CircleGame) Draw(screen *ebiten.Image) {
 	radius := c.middle.Sub(mouse).Clamp(SideLength / 2).Length()
 	DrawCircle(screen, c.middle, radius, colornames.Red)
 
-	ebitenutil.DrawLine(screen, SideLength / 2, 0, SideLength / 2, SideLength, colornames.Aqua)
-	ebitenutil.DrawLine(screen, 0, SideLength / 2, SideLength, SideLength / 2, colornames.Aqua)
+	ebitenutil.DrawLine(screen, SideLength/2, 0, SideLength/2, SideLength, colornames.Aqua)
+	ebitenutil.DrawLine(screen, 0, SideLength/2, SideLength, SideLength/2, colornames.Aqua)
 	ebitenutil.DebugPrint(screen, fmt.Sprint(shiftx, shifty))
 }
 

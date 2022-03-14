@@ -7,15 +7,15 @@ import (
 )
 
 func uniform(a, b float64) float64 {
-	return a + (b - a) * rand.Float64()
+	return a + (b-a)*rand.Float64()
 }
 
 func irange(a, b int) int {
-	return a + rand.Intn(b - a)
+	return a + rand.Intn(b-a)
 }
 
 type Dot struct {
-	body *cp.Body
+	body  *cp.Body
 	moves []cp.Vector
 }
 

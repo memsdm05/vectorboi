@@ -25,9 +25,9 @@ func (n *Node) ScaleMe() bool {
 
 func (n *Node) Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	if n.Root() {
-		return helpers.CircleImage(n.Radius * zoom, colornames.Red), nil
+		return helpers.CircleImage(n.Radius*zoom, colornames.Red), nil
 	}
-	return helpers.CircleImage(n.Radius * zoom, colornames.White), nil
+	return helpers.CircleImage(n.Radius*zoom, colornames.White), nil
 }
 
 func NewNode() *Node {
@@ -39,7 +39,7 @@ func NewNode() *Node {
 func NewRandomNode() *Node {
 	node := NewNode()
 	node.Angle = rand.Float64() * 2 * math.Pi
-	node.Radius = 10 + rand.Float64() * 10
+	node.Radius = 10 + rand.Float64()*10
 	return node
 }
 
@@ -99,7 +99,7 @@ func (n *Node) Intersects(other *Node) bool {
 	if n.Parent == other {
 		return false
 	}
-	return n.Position().Near(other.Position(), n.Radius * 2 + other.Radius)
+	return n.Position().Near(other.Position(), n.Radius*2+other.Radius)
 }
 
 func (n *Node) Attach(child *Node) {
@@ -107,11 +107,11 @@ func (n *Node) Attach(child *Node) {
 	child.Parent = n
 }
 
-func (n *Node) Detach()  {
+func (n *Node) Detach() {
 	pc := n.Parent.Children
 	for i := len(pc); i >= 0; i-- {
 		if pc[i] == n {
-			last := pc[len(pc) - 1]
+			last := pc[len(pc)-1]
 			pc[i], last = last, nil
 			break
 		}
@@ -123,7 +123,6 @@ func (n *Node) Position() cp.Vector {
 	if n.Root() {
 		return cp.Vector{}
 	}
-
 
 	p := n.Parent
 	return p.Position().Add(cp.ForAngle(n.Angle).Mult(p.Radius + n.Radius))

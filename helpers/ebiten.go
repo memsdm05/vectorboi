@@ -61,10 +61,10 @@ func CircleImage(radius float64, color color.Color) *ebiten.Image {
 }
 
 // Kill me now
-func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color)  {
+func DrawCircle(dst *ebiten.Image, pos cp.Vector, radius float64, color color.Color) {
 	//side := int(math.Ceil(radius) * 2)
 	//halfside := float64(side / 2)
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(pos.X + radius, pos.Y + radius)
+	op.GeoM.Translate(pos.X+radius, pos.Y+radius)
 	dst.DrawImage(CircleImage(radius, color), op)
 }

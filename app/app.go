@@ -10,8 +10,8 @@ import (
 const TimeStep = 1 / 60.
 
 type Game struct {
-	camera *helpers.Camera
-	space *cp.Space
+	camera       *helpers.Camera
+	space        *cp.Space
 	testCreature *creature.Creature
 }
 

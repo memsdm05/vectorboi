@@ -48,7 +48,7 @@ func (c *Creature) randomBodyNode() *Node {
 	return c.Body[rand.Intn(len(c.Body))]
 }
 
-func (c *Creature) Draw(dst *ebiten.Image)  {
+func (c *Creature) Draw(dst *ebiten.Image) {
 }
 
 func (c *Creature) CreatePhysicsBody(space *cp.Space) *cp.Body {
@@ -69,7 +69,7 @@ func (c *Creature) String() string {
 	return c.root().String()
 }
 
-func (c *Creature) Do(f func(n *Node))  {
+func (c *Creature) Do(f func(n *Node)) {
 	c.root().Do(f)
 }
 
