@@ -17,13 +17,14 @@ func irange(a, b int) int {
 type Dot struct {
 	body  *cp.Body
 	moves []cp.Vector
+	dead  bool
 }
 
 func NewRandomDot() *Dot {
 	dot := &Dot{moves: make([]cp.Vector, 0)}
 	for i := 0; i < 20; i++ {
 		vector := cp.
-			ForAngle(2 * math.Pi * rand.Float64()).Mult(1000)
+			ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(50, 100))
 		dot.moves = append(dot.moves, vector)
 	}
 	return dot

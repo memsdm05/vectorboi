@@ -11,13 +11,13 @@ func ConstantFitness(dot *Dot, pop *Population) float64 {
 }
 
 type Population struct {
-	Dots  []*Dot
-	Num   int
-	Space *cp.Space
-	Time  float64
-	OnMove  int
+	Dots   []*Dot
+	Num    int
+	Space  *cp.Space
+	Time   float64
+	OnMove int
 
-	spawn cp.Vector
+	spawn   cp.Vector
 	fitness Eval
 	running bool
 
@@ -35,7 +35,7 @@ func NewRandomPopulation(num int, spawn cp.Vector, fitness Eval) *Population {
 		Num:     num,
 		Space:   cp.NewSpace(),
 		fitness: fitness,
-		spawn: spawn,
+		spawn:   spawn,
 	}
 	pop.Space.UseSpatialHash(2, 100)
 

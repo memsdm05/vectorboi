@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	PopulationSize = 500
-	Width = 1920
-	Height = 1080
-	TimeStep = 1 / 60.
+	PopulationSize = 1000
+	Width          = 1920
+	Height         = 1080
+	TimeStep       = 1 / 60.
 )
 
 type DotGame struct {
@@ -24,7 +24,7 @@ type DotGame struct {
 func (d *DotGame) Init() {
 	d.pop = NewRandomPopulation(PopulationSize, cp.Vector{
 		X: Width / 2,
-		Y: Height - Height / 10,
+		Y: Height - Height/10,
 	}, nil)
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
 }
@@ -37,7 +37,7 @@ func (d *DotGame) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 		for _, dot := range d.pop.Dots {
 			if d.pop.OnMove < len(dot.moves) {
-				dot.body.ApplyForceAtLocalPoint(dot.moves[d.pop.OnMove], cp.Vector{})
+				dot.body.ApplyImpulseAtLocalPoint(dot.moves[d.pop.OnMove], cp.Vector{})
 				//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
 			}
 		}
