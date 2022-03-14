@@ -110,5 +110,6 @@ func (c CircleGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screen
 
 func main() {
 	ebiten.SetWindowSize(400, 400)
+	ebiten.SetScreenTransparent(true)
 	helpers.RunGame(new(CircleGame))
 }

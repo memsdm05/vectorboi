@@ -17,6 +17,8 @@ github.com/jezek/xgb v0.0.0-20210312150743-0e0f116e1240 h1:dy+DS31tGEGCsZzB45HmJ
 github.com/jezek/xgb v0.0.0-20210312150743-0e0f116e1240/go.mod h1:3P4UH/k22rXyHIJD2w4h2XMqPX4Of/eySEZq9L6wqc4=
 github.com/jfreymuth/oggvorbis v1.0.3/go.mod h1:1U4pqWmghcoVsCJJ4fRBKv9peUJMBHixthRlBeD6uII=
 github.com/jfreymuth/vorbis v1.0.2/go.mod h1:DoftRo4AznKnShRl1GxiTFCseHr4zR9BN3TWXyuzrqQ=
+github.com/jinzhu/copier v0.3.5 h1:GlvfUwHk62RokgqVNvYsku0TATCF7bAHVwEXoBh3iJg=
+github.com/jinzhu/copier v0.3.5/go.mod h1:DfbEm0FYsaqBcKcFuvmOZb218JkPGtvSHsKg8S8hyyg=
 github.com/pkg/browser v0.0.0-20180916011732-0a3d74bf9ce4/go.mod h1:4OwLy04Bl9Ef3GJJCoec+30X3LQs/0/m4HFRt/2LUSA=
 github.com/silbinarywolf/preferdiscretegpu v1.0.0 h1:tuvXLRCnoFMFyk74/8PFvO0B5rjDmXm0JgNTaOYAHT0=
 github.com/silbinarywolf/preferdiscretegpu v1.0.0/go.mod h1:h3s2GkfAP2sWqoS7v/PxAlFOQ1azMRsZxUJNw47QhLc=

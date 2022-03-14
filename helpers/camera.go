@@ -86,7 +86,7 @@ BB{
 func (c *Camera) Render(dst *ebiten.Image, space *cp.Space) {
 	// resize frustum
 	w, h := dst.Size()
-	hw, hh := float64(w) / 2 * c.Scale, float64(h) / 2 * c.Scale
+	hw, hh := (float64(w) / 2) * c.Scale, (float64(h) / 2) * c.Scale
 	c.frustum.L = c.Position.X - hw
 	c.frustum.B = c.Position.Y - hh
 	c.frustum.R = c.Position.X + hw

@@ -17,9 +17,6 @@ type Node struct {
 	Thrusters []Thruster
 	Angle     float64
 	Radius    float64
-
-	cachedPos cp.Vector
-	cachedDepth int
 }
 
 func (n *Node) ScaleMe() bool {
@@ -33,17 +30,17 @@ func (n *Node) Draw(zoom float64) (*ebiten.Image, *ebiten.DrawImageOptions) {
 	return helpers.CircleImage(n.Radius * zoom, colornames.White), nil
 }
 
-func NewRandomNode() *Node {
+func NewNode() *Node {
 	return &Node{
 		Children: make([]*Node, 0),
-		Angle:    rand.Float64() * 2 * math.Pi,
-		Radius:   10 + rand.Float64() * 10,
 	}
 }
 
-func (n *Node) resetCache()  {
-	n.cachedPos = cp.Vector{}
-	n.cachedDepth = 0
+func NewRandomNode() *Node {
+	node := NewNode()
+	node.Angle = rand.Float64() * 2 * math.Pi
+	node.Radius = 10 + rand.Float64() * 10
+	return node
 }
 
 func (n *Node) String() string {
@@ -127,13 +124,9 @@ func (n *Node) Position() cp.Vector {
 		return cp.Vector{}
 	}
 
-	if !n.cachedPos.Equal(cp.Vector{}) {
-		return n.cachedPos
-	}
 
 	p := n.Parent
-	n.cachedPos = p.Position().Add(cp.ForAngle(n.Angle).Mult(p.Radius + n.Radius))
-	return n.cachedPos
+	return p.Position().Add(cp.ForAngle(n.Angle).Mult(p.Radius + n.Radius))
 }
 
 type Thruster struct {
