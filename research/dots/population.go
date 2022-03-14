@@ -15,8 +15,9 @@ type Population struct {
 	Num   int
 	Space *cp.Space
 	Time  float64
+	OnMove  int
 
-	onmove  int
+	spawn cp.Vector
 	fitness Eval
 	running bool
 
@@ -24,7 +25,7 @@ type Population struct {
 	bestDotFitness float64
 }
 
-func NewRandomPopulation(num int, fitness Eval) *Population {
+func NewRandomPopulation(num int, spawn cp.Vector, fitness Eval) *Population {
 	if fitness == nil {
 		fitness = ConstantFitness
 	}
@@ -34,13 +35,22 @@ func NewRandomPopulation(num int, fitness Eval) *Population {
 		Num:     num,
 		Space:   cp.NewSpace(),
 		fitness: fitness,
+		spawn: spawn,
 	}
+	pop.Space.UseSpatialHash(2, 100)
 
 	for i := 0; i < num; i++ {
-		pop.Dots[i] = NewRandomDot()
+		ndot := NewRandomDot()
+		ndot.CreatePhysicsBody(pop.Space)
+		ndot.body.SetPosition(spawn)
+		pop.Dots[i] = ndot
 	}
 
 	return pop
+}
+
+func (p *Population) IsBest(dot *Dot) bool {
+	return dot == p.bestDot
 }
 
 func (p *Population) Step(dt float64) {
@@ -48,9 +58,9 @@ func (p *Population) Step(dt float64) {
 	p.Time += dt
 
 	for _, dot := range p.Dots {
-		if p.onmove < len(dot.moves) {
-			dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.onmove], cp.Vector{})
-		}
+		//if p.OnMove < len(dot.moves) {
+		//	dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
+		//}
 
 		if f := p.fitness(dot, p); f > p.bestDotFitness {
 			p.bestDot = dot
@@ -58,5 +68,5 @@ func (p *Population) Step(dt float64) {
 		}
 	}
 
-	p.onmove++
+	//p.OnMove++
 }

@@ -21,9 +21,9 @@ type Dot struct {
 
 func NewRandomDot() *Dot {
 	dot := &Dot{moves: make([]cp.Vector, 0)}
-	for i := 0; i < irange(10, 20); i++ {
+	for i := 0; i < 20; i++ {
 		vector := cp.
-			ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(2, 100))
+			ForAngle(2 * math.Pi * rand.Float64()).Mult(1000)
 		dot.moves = append(dot.moves, vector)
 	}
 	return dot
@@ -32,9 +32,13 @@ func NewRandomDot() *Dot {
 func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 	// haha
 
-	d.body = space.AddBody(cp.NewBody(0, 0))
+	d.body = cp.NewBody(0, 0)
 	shape := cp.NewCircle(d.body, 1, cp.Vector{})
-	shape.SetDensity(10)
-	d.body.AddShape(space.AddShape(shape))
+	shape.SetMass(1)
+	shape.SetFilter(cp.SHAPE_FILTER_NONE)
+	d.body.AccumulateMassFromShapes()
+
+	space.AddShape(shape)
+	space.AddBody(d.body)
 	d.body.UserData = d
 }
