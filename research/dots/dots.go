@@ -6,8 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
-	"golang.org/x/image/colornames"
-	color2 "image/color"
 	"vectorboi/helpers"
 )
 
@@ -23,7 +21,7 @@ type DotGame struct {
 }
 
 func (d *DotGame) Init() {
-	d.pop = NewRandomPopulation(PopulationSize, Width, Height, nil)
+	d.pop = NewRandomPopulation(PopulationSize, Width, Height, DistanceFitness)
 	d.pop.Space.SetDamping(0.5)
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
 }
@@ -56,23 +54,10 @@ func (d *DotGame) Update() error {
 }
 
 func (d *DotGame) Draw(screen *ebiten.Image) {
-	for _, dot := range d.pop.Dots {
-		pos := dot.body.Position()
+	d.pop.Draw(screen)
 
-		var dcolor color2.Color
-		switch {
-		case dot.dead:
-			dcolor = colornames.Red
-		case d.pop.IsBest(dot):
-			dcolor = colornames.Coral
-		default:
-			dcolor = colornames.White
-		}
-
-		screen.Set(int(pos.X), int(pos.Y), dcolor)
-	}
-
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("move %v", d.pop.OnMove))
+	ebitenutil.DebugPrint(screen,
+		fmt.Sprintf("move %v, gen %v, dt %.2f", d.pop.OnMove, d.pop.Generation, d.pop.Time))
 }
 
 func (d *DotGame) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

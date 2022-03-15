@@ -18,6 +18,7 @@ type Dot struct {
 	body    *cp.Body
 	moves   []cp.Vector
 	dead    bool
+	scored  bool
 	fitness float64
 }
 
