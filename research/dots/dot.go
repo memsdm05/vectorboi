@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/jakecoffman/cp"
 	"math"
 	"math/rand"
@@ -24,7 +25,7 @@ type Dot struct {
 
 func NewRandomDot() *Dot {
 	dot := &Dot{moves: make([]cp.Vector, 0)}
-	for i := 0; i < 20; i++ {
+	for i := 0; i < irange(3, 10); i++ {
 		vector := cp.
 			ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(50, 100))
 		dot.moves = append(dot.moves, vector)
@@ -44,4 +45,8 @@ func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 	space.AddShape(shape)
 	space.AddBody(d.body)
 	d.body.UserData = d
+}
+
+func (d *Dot) String() string {
+	return fmt.Sprintf("%.2f", d.fitness)
 }

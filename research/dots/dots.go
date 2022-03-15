@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	PopulationSize = 2000
+	PopulationSize = 100
 	Width          = 640
 	Height         = 480
 	TimeStep       = 1 / 60.
