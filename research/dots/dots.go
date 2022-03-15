@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	PopulationSize = 1000
+	PopulationSize = 2000
 	Width          = 640
 	Height         = 480
 	TimeStep       = 1 / 60.
@@ -21,7 +21,7 @@ type DotGame struct {
 }
 
 func (d *DotGame) Init() {
-	d.pop = NewRandomPopulation(PopulationSize, Width, Height, DistanceFitness)
+	d.pop = NewRandomPopulation(PopulationSize, Width, Height, nil)
 	d.pop.Space.SetDamping(0.5)
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
 }

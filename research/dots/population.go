@@ -4,6 +4,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
+	"golang.org/x/image/colornames"
+	"math"
 	"sort"
 
 	_ "image/jpeg"
@@ -13,6 +15,7 @@ import (
 const (
 	GenerationTime = 15
 	KickTime = 1.2
+	Side = 20
 )
 
 var (
@@ -34,8 +37,9 @@ func RandomFitness(dot *Dot, pop *Population) float64 {
 }
 
 func DistanceFitness(dot *Dot, pop *Population) float64 {
-	constraint := pop.Spawn.Distance(pop.Target)
-	return 1. - (dot.body.Position().Distance(pop.Target) / constraint)
+	center := pop.Target.Center()
+	constraint := pop.Spawn.Distance(center)
+	return 1. - (dot.body.Position().Distance(center) / constraint)
 }
 
 type Population struct {
@@ -47,7 +51,7 @@ type Population struct {
 	Time          float64
 
 	Spawn   cp.Vector
-	Target  cp.Vector
+	Target  cp.BB
 	fitness Eval
 	running bool
 
@@ -64,6 +68,11 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		fitness = RandomFitness
 	}
 
+	target := cp.Vector{
+		X: Width / 2,
+		Y: Height / 10,
+	}
+
 	pop := &Population{
 		Dots:   make([]*Dot, num, num),
 		Space:  cp.NewSpace(),
@@ -71,8 +80,9 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		Height: height,
 		Spawn: cp.Vector{
 			X: Width / 2,
-			Y: Height - Height/10,
+			Y: Height - Height / 10,
 		},
+		Target: cp.NewBBForExtents(target, Side / 2, Side / 2),
 		fitness: fitness,
 	}
 
@@ -99,11 +109,14 @@ func (p *Population) reset() {
 		dot.body.SetPosition(p.Spawn)
 		dot.body.SetVelocity(0, 0)
 		dot.body.SetForce(cp.Vector{})
+		dot.scored = false
 		p.unkill(dot)
 	}
 }
 
 func (p *Population) evolve() {
+	l := len(p.Dots)
+
 	// evaluate fitness
 	for _, dot := range p.Dots {
 		dot.fitness = p.fitness(dot, p)
@@ -113,14 +126,18 @@ func (p *Population) evolve() {
 	sort.Sort(p)
 
 	// kill lower half
-	//middle := p.Dots[len(p.Dots) / 2].fitness
-	//for i, dot := range p.Dots {
-	//	if dot.fitness < middle {
-	//		p.Dots[i] = nil // RIP
-	//	}
-	//}
+	middle := p.Dots[l / 2].fitness
+	for i, dot := range p.Dots {
+		if dot.fitness < middle {
+			p.Dots[i] = nil // RIP
+		}
+	}
 
-	// todo crossover, mutate
+	for i := l - 1; p.Dots[i] == nil; i-- {
+		p.Dots[i] = Mutate(Clone(p.Dots[i - l - 1]))
+	}
+
+	// todo crossover, mutate, evrything
 
 	p.reset()
 }
@@ -141,7 +158,9 @@ func (p *Population) IsBest(dot *Dot) bool {
 
 func (p *Population) Step(dt float64) {
 	if p.Time > GenerationTime { // cahnge this for
-		p.evolve()
+		//p.evolve()
+		p.reset()
+		// todo
 	}
 
 	p.Space.Step(dt)
@@ -156,17 +175,25 @@ func (p *Population) Step(dt float64) {
 	p.bestDotFitness = 0
 
 	for _, dot := range p.Dots {
-		//if p.OnMove < len(dot.moves) {
-		//	dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
-		//}
-		if hitnow && p.OnMove < len(dot.moves) {
-			dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
-			//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
+		if dot.dead {
+			p.Space.Deactivate(dot.body)
 		}
 
+		// hit dot when the thing yea
+		if hitnow && p.OnMove < len(dot.moves) {
+			dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
+			//dot.body.ApplyForceAtLocalPognt(, cp.Vector{})
+		}
+
+		// kill dot if hit wall
 		pos := dot.body.Position()
 		if pos.X > float64(p.Width)-2 || pos.X < 2 || pos.Y > float64(p.Height)-2 || pos.Y < 2 {
 			p.kill(dot)
+		}
+
+		if p.Target.ContainsVect(pos) {
+			dot.scored = true
+			p.Space.Deactivate(dot.body)
 		}
 
 		if f := p.fitness(dot, p); f > p.bestDotFitness {
@@ -181,31 +208,28 @@ func (p *Population) Step(dt float64) {
 }
 
 func (p *Population) Draw(dst *ebiten.Image) {
+	ebitenutil.DrawRect(dst,
+		p.Target.L, p.Target.B,
+		p.Target.R - p.Target.L, p.Target.T - p.Target.B,
+		colornames.Green)
+
 	op := &ebiten.DrawImageOptions{}
-	for i, dot := range p.Dots {
+	for _, dot := range p.Dots {
 		pos := dot.body.Position()
 
 		op.GeoM.Reset()
 		op.GeoM.Translate(float64(-sw) / 2, float64(-sh) / 2)
 		op.GeoM.Scale(0.02, 0.02)
-		op.GeoM.Translate(pos.X, pos.Y)
-
 		op.ColorM.Reset()
 		switch {
 		case dot.dead:
-			op.ColorM.RotateHue(p.Time * 10 + float64(i) * 3)
-		case p.IsBest(dot):
-			op.ColorM.Invert()
-		default:
-			op.ColorM.RotateHue(p.Time)
+			op.ColorM.RotateHue(p.Time * 10)
+		case dot.scored:
+			pulse := math.Sin(p.Time)
+			op.GeoM.Scale(pulse, pulse)
 		}
+		op.GeoM.Translate(pos.X, pos.Y)
 
 		dst.DrawImage(snorb, op)
 	}
-
-	op.GeoM.Reset()
-	op.GeoM.Translate(float64(-gw) / 2, float64(-gh) / 2)
-	op.GeoM.Scale(0.5, 0.5)
-	op.GeoM.Translate(p.Target.X, p.Target.Y)
-	dst.DrawImage(gooblegop, op)
 }
