@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/jakecoffman/cp"
 	"vectorboi/helpers"
 )
 
 const (
-	PopulationSize = 100
+	PopulationSize = 300
 	Width          = 640
 	Height         = 480
 	TimeStep       = 1 / 60.
@@ -31,15 +29,15 @@ func (d *DotGame) Shutdown() {}
 func (d *DotGame) Update() error {
 	d.pop.Step(TimeStep)
 
-	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
-		for _, dot := range d.pop.Dots {
-			if d.pop.OnMove < len(dot.moves) {
-				dot.body.ApplyImpulseAtLocalPoint(dot.moves[d.pop.OnMove], cp.Vector{})
-				//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
-			}
-		}
-		d.pop.OnMove++
-	}
+	//if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+	//	for _, dot := range d.pop.Dots {
+	//		if d.pop.OnMove < len(dot.moves) {
+	//			dot.body.ApplyImpulseAtLocalPoint(dot.moves[d.pop.OnMove], cp.Vector{})
+	//			//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
+	//		}
+	//	}
+	//	d.pop.OnMove++
+	//}
 
 	//if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 	//	for _, dot := range d.pop.Dots {

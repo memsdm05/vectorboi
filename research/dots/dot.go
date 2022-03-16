@@ -21,11 +21,12 @@ type Dot struct {
 	dead    bool
 	scored  bool
 	fitness float64
+	age int
 }
 
 func NewRandomDot() *Dot {
 	dot := &Dot{moves: make([]cp.Vector, 0)}
-	for i := 0; i < irange(3, 10); i++ {
+	for i := 0; i < irange(10, 15); i++ {
 		vector := cp.
 			ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(50, 100))
 		dot.moves = append(dot.moves, vector)

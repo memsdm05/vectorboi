@@ -7,7 +7,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
 	"image/color"
-	"math"
+	"runtime"
 	"sort"
 
 	_ "image/jpeg"
@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	GenerationTime = 15
+	GenerationTime = 10
 	KickTime = 1.2
 	Side = 20
 )
@@ -45,14 +45,13 @@ func DistanceFitness(dot *Dot, pop *Population) float64 {
 }
 
 func CompoundFitness(dot *Dot, pop *Population) float64 {
-	center := pop.Target.Center()
-	base := math.Sqrt(200 / float64(len(dot.moves)) * dot.body.Position().Distance(center))
+	base := dot.body.Position().Distance(pop.Target.Center())
 	if dot.scored {
-		base += 10
+		base -= 10 // inject black tar heroin directly into the dot
 	} else if dot.dead {
-		base -= 10
+		base += 10 //
 	}
-	return base
+	return base + float64(len(dot.moves)) * 5
 }
 
 type Population struct {
@@ -73,10 +72,14 @@ type Population struct {
 }
 
 func (p *Population) Len() int           { return len(p.Dots) }
-func (p *Population) Less(i, j int) bool { return p.Dots[i].fitness >= p.Dots[j].fitness }
+func (p *Population) Less(i, j int) bool { return p.Dots[i].fitness <= p.Dots[j].fitness }
 func (p *Population) Swap(i, j int)      { p.Dots[i], p.Dots[j] = p.Dots[j], p.Dots[i] }
 
 func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
+	if num % 2 != 0 {
+		panic("num must be even")
+	}
+
 	if fitness == nil {
 		fitness = CompoundFitness
 	}
@@ -127,6 +130,39 @@ func (p *Population) reset() {
 	}
 }
 
+type statistics struct {
+	avgFitness float64
+	avgMoves float64
+	avgAge float64
+
+	dead int
+	scored int
+	vibing int
+}
+
+func (p *Population) stats() statistics {
+	l := float64(len(p.Dots))
+	avs := statistics{}
+	for _, dot := range p.Dots {
+		avs.avgFitness += dot.fitness
+		avs.avgMoves += float64(len(dot.moves))
+		avs.avgAge += float64(dot.age)
+
+		switch {
+		case dot.dead:
+			avs.dead++
+		case dot.scored:
+			avs.scored++
+		default:
+			avs.vibing++
+		}
+	}
+	avs.avgFitness /= l
+	avs.avgMoves /= l
+	avs.avgAge /= l
+	return avs
+}
+
 func (p *Population) evolve() {
 	l := len(p.Dots)
 
@@ -134,6 +170,16 @@ func (p *Population) evolve() {
 	for _, dot := range p.Dots {
 		dot.fitness = p.fitness(dot, p)
 	}
+
+	// print stats
+	stats := p.stats()
+	fmt.Printf("==== GENERATION %v ====\n", p.Generation)
+	fmt.Println("Avg. Fitness:", stats.avgFitness)
+	fmt.Println("Avg. Moves:", stats.avgMoves)
+	fmt.Println("Avg. Age:", stats.avgAge)
+	fmt.Printf("dead %v | scored %v | vibing %v\n",
+		stats.dead, stats.scored, stats.vibing)
+	fmt.Println()
 
 	// sort by fitness
 	sort.Sort(p)
@@ -145,18 +191,24 @@ func (p *Population) evolve() {
 	//		p.Dots[i] = nil // RIP
 	//	}
 	//}
-	for i := 0; i < (l / 2) - 1; i++ {
+	for i := 0; i < (l / 2) - 1; i += 2 {
 		j := i + l / 2
-		ndot := Clone(p.Dots[i])
-		ndot.CreatePhysicsBody(p.Space)
-		Mutate(ndot)
-		p.Dots[j] = ndot
+		a, b := Crossover(p.Dots[i], p.Dots[i + 1])
+		Mutate(a)
+		Mutate(b)
+
+		a.CreatePhysicsBody(p.Space)
+		b.CreatePhysicsBody(p.Space)
+
+		p.Dots[i].age++
+		p.Dots[i + 1].age++
+		p.Dots[j] = a
+		p.Dots[j + 1] = b
+
 	}
 
-	fmt.Println(p.Dots)
-
-	// todo crossover, mutate, everything
-
+	//fmt.Println(p.Dots)
+	runtime.GC()
 	p.reset()
 }
 
@@ -193,7 +245,7 @@ func (p *Population) Step(dt float64) {
 	p.bestDotFitness = 0
 
 	for _, dot := range p.Dots {
-		if dot.dead {
+		if dot.dead || dot.scored{
 			p.Space.Deactivate(dot.body)
 		}
 
