@@ -49,5 +49,5 @@ func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 }
 
 func (d *Dot) String() string {
-	return fmt.Sprintf("%.2f", d.fitness)
+	return fmt.Sprintf("Dot %.2f", d.fitness)
 }

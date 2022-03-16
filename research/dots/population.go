@@ -21,6 +21,12 @@ const (
 	Side = 20
 )
 
+const(
+	DotCategory = 1 << uint(iota)
+	KillWallCategory
+	GoalCategory
+)
+
 //var (
 //	gooblegop, _ = ebitenutil.NewImageFromURL("https://images.thdstatic.com/productImages/bf4a1fd8-aca2-4f0f-94a6-d188cf1ba7ea/svn/black-fence-armor-deck-post-caps-pf-acn-252b-4f_600.jpg")
 //	snorb, _     = ebitenutil.NewImageFromURL("https://www.pikpng.com/pngl/b/190-1905158_scary-eye-png-transparent-creepy-eyeball-png-clipart.png")
@@ -62,6 +68,7 @@ type Population struct {
 	Width, Height int
 	Generation    int
 	Time          float64
+	KillWalls     []KillWall
 
 	Spawn   cp.Vector
 	Target  cp.BB
@@ -90,7 +97,7 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		Y: Height / 10,
 	}
 
-	pop := &Population{
+	p := &Population{
 		Dots:   make([]*Dot, num, num),
 		Space:  cp.NewSpace(),
 		Width:  width,
@@ -103,16 +110,41 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		fitness: fitness,
 	}
 
-	pop.Space.SleepTimeThreshold = cp.INFINITY
-	pop.Space.UseSpatialHash(2, 100)
-	for i := 0; i < num; i++ {
-		ndot := NewRandomDot()
-		ndot.CreatePhysicsBody(pop.Space)
-		pop.Dots[i] = ndot
+	p.Space.SleepTimeThreshold = cp.INFINITY
+	p.Space.UseSpatialHash(2, 100)
+	for _, wall := range p.KillWalls {
+		wall.PhysicsShape(p.Space)
 	}
 
-	pop.reset()
-	return pop
+	for i := 0; i < num; i++ {
+		ndot := NewRandomDot()
+		ndot.CreatePhysicsBody(p.Space)
+		p.Dots[i] = ndot
+	}
+	
+	ch := p.Space.NewCollisionHandler(cp.WILDCARD_COLLISION_TYPE, cp.WILDCARD_COLLISION_TYPE)
+	ch.UserData = p
+	ch.PreSolveFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
+		a, b := arb.Bodies()
+
+		// actual garbage code
+		var dot *Dot
+		if d, ok := a.UserData.(*Dot); ok {
+			dot = d
+		} else if d, ok = b.UserData.(*Dot); ok  {
+			dot = d
+		} else {
+			panic("huh")
+		}
+		_ = dot
+
+		fmt.Println("collide")
+		//userData.(*Population).kill(dot)
+
+		return true
+	}
+	p.reset()
+	return p
 }
 
 func (p *Population) reset() {
@@ -206,6 +238,12 @@ func (p *Population) evolve() {
 		p.Dots[j] = a
 		p.Dots[j + 1] = b
 
+	}
+
+	cp.ShapeFilter{
+		Group:      0,
+		Categories: 0,
+		Mask:       0,
 	}
 
 	//fmt.Println(p.Dots)
@@ -313,5 +351,9 @@ func (p *Population) Draw(dst *ebiten.Image) {
 		//op.GeoM.Translate(pos.X, pos.Y)
 		//
 		//dst.DrawImage(snorb, op)
+	}
+
+	for _, wall := range p.KillWalls {
+		wall.Draw(dst)
 	}
 }

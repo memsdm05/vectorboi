@@ -21,6 +21,10 @@ type DotGame struct {
 func (d *DotGame) Init() {
 	d.pop = NewRandomPopulation(PopulationSize, Width, Height, nil)
 	d.pop.Space.SetDamping(0.5)
+	d.pop.KillWalls = []KillWall{
+		MakeKillWall(0, 200, 300, 300),
+		MakeKillWall(Width, 100, 220, 200),
+	}
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
 }
 
