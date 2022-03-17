@@ -2,27 +2,42 @@ package main
 
 import (
 	"github.com/jakecoffman/cp"
+	"math"
 	"math/rand"
 )
 
 func Clone(dot *Dot) *Dot {
 	ret := &Dot{
-		moves:  make([]cp.Vector, len(dot.moves), len(dot.moves)),
+		Moves: make([]cp.Vector, len(dot.Moves), len(dot.Moves)),
 	}
-	for i := range dot.moves {
-		ret.moves[i] = dot.moves[i]
+	for i := range dot.Moves {
+		ret.Moves[i] = dot.Moves[i]
 	}
 	return ret
 }
 
 func Mutate(dot *Dot) *Dot{
-	for i := range dot.moves {
-		if rand.Float64() < .3 {
-			move := &dot.moves[i]
-			move.X += rand.Float64() * 5
-			move.Y += rand.Float64() * 5
+	for i := len(dot.Moves) - 1; i >= 0; i-- {
+		// 10% chance of changing the vector
+		if rand.Float64() < .1 {
+			move := &dot.Moves[i]
+			move.X += uniform(-5, 5)
+			move.Y += uniform(-5, 5)
 			*move = move.Clamp(100)
 		}
+
+		// 5% change of deleting the move (if there is more than 1 move left)
+		if rand.Float64() < .05 && len(dot.Moves) > 1 {
+			dot.Moves = append(dot.Moves[:i], dot.Moves[i+1:]...)
+		}
+
+		// 5% change of adding a move
+		if rand.Float64() < .05 {
+			dot.Moves = append(dot.Moves[:i+1], dot.Moves[i:]...)
+			dot.Moves[i] = cp.
+				ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(50, 100))
+		}
+
 	}
 	return dot
 }
@@ -32,23 +47,23 @@ func Crossover(a, b *Dot) (*Dot, *Dot) {
 	childB := Clone(b)
 
 	// A should be larger than B
-	if len(childA.moves) < len(childB.moves) {
+	if len(childA.Moves) < len(childB.Moves) {
 		childA, childB = childB, childA
 	}
 
-	alen, blen := len(childA.moves), len(childB.moves)
+	alen, blen := len(childA.Moves), len(childB.Moves)
 	n := rand.Intn(blen)
 
 	cull := 0
 	for i := n; i < alen; i++ {
 		if i < blen {
-			childA.moves[i], childB.moves[i] = childB.moves[i], childA.moves[i]
+			childA.Moves[i], childB.Moves[i] = childB.Moves[i], childA.Moves[i]
 		} else {
-			childB.moves = append(childB.moves, childA.moves[i])
+			childB.Moves = append(childB.Moves, childA.Moves[i])
 			cull++
 		}
 	}
-	childA.moves = childA.moves[:alen - cull]
+	childA.Moves = childA.Moves[:alen - cull]
 
 
 	return childA, childB

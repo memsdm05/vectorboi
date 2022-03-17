@@ -7,11 +7,12 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
+	"time"
 	"vectorboi/helpers"
 )
 
 const (
-	PopulationSize = 300
+	PopulationSize = 1000
 	Width          = 640
 	Height         = 480
 	TimeStep       = 1 / 60.
@@ -25,9 +26,15 @@ type DotGame struct {
 func (d *DotGame) Init() {
 	d.pop = NewRandomPopulation(PopulationSize, Width, Height, nil)
 	d.pop.Space.SetDamping(0.5)
-	d.pop.KillWalls = []KillWall{
+	d.pop.AddKillWalls(
 		MakeKillWall(2, 200, 300, 300),
-		//MakeKillWall(Width, 100, 220, 200),
+		MakeKillWall(Width, 100, 220, 200),
+		//MakeKillWall(200, 200, Width - 200, 200),
+	)
+
+	start := time.Now()
+	for time.Since(start) < 15 * time.Second {
+		d.pop.Step(1./30)
 	}
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
 }
@@ -54,8 +61,8 @@ func (d *DotGame) Update() error {
 
 	//if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 	//	for _, dot := range d.pop.Dots {
-	//		if d.pop.OnMove < len(dot.moves) {
-	//			dot.body.ApplyImpulseAtLocalPoint(dot.moves[d.pop.OnMove], cp.Vector{})
+	//		if d.pop.OnMove < len(dot.Moves) {
+	//			dot.body.ApplyImpulseAtLocalPoint(dot.Moves[d.pop.OnMove], cp.Vector{})
 	//			//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
 	//		}
 	//	}
@@ -84,7 +91,11 @@ func (d *DotGame) Draw(screen *ebiten.Image) {
 			ebitenutil.DrawRect(screen, pos.X-2, pos.Y-2, 4, 4, colornames.Aqua)
 		})
 
-		msg += fmt.Sprintf("\nFPS %.2f, TPS %.2f", ebiten.CurrentFPS(), ebiten.CurrentTPS())
+		x, y := ebiten.CursorPosition()
+		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("(%d, %d)", x, y), x, y - 12)
+
+		msg += fmt.Sprintf("\nFPS %.2f, TPS %.2f",
+			ebiten.CurrentFPS(), ebiten.CurrentTPS())
 	}
 
 

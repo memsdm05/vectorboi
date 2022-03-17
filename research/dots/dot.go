@@ -17,21 +17,26 @@ func irange(a, b int) int {
 
 type Dot struct {
 	body    *cp.Body
-	moves   []cp.Vector
+	Moves   []cp.Vector
+	history []cp.Vector
 	dead    bool
 	scored  bool
 	fitness float64
-	age int
+	Age     int
 }
 
 func NewRandomDot() *Dot {
-	dot := &Dot{moves: make([]cp.Vector, 0)}
-	for i := 0; i < irange(10, 15); i++ {
+	dot := &Dot{Moves: make([]cp.Vector, 0)}
+	for i := 0; i < irange(5, 15); i++ {
 		vector := cp.
 			ForAngle(2 * math.Pi * rand.Float64()).Mult(uniform(50, 100))
-		dot.moves = append(dot.moves, vector)
+		dot.Moves = append(dot.Moves, vector)
 	}
 	return dot
+}
+
+func (d *Dot) Kick(move int) {
+
 }
 
 func (d *Dot) CreatePhysicsBody(space *cp.Space) {

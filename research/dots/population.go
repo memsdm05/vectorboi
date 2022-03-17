@@ -8,6 +8,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
 	"image/color"
+	"math"
 	"runtime"
 	"sort"
 
@@ -56,9 +57,9 @@ func CompoundFitness(dot *Dot, pop *Population) float64 {
 	if dot.scored {
 		base -= 10 // inject black tar heroin directly into the dot
 	} else if dot.dead {
-		base += 10 //
+		base += 10 // punish death
 	}
-	return base + float64(len(dot.moves)) * 5
+	return base + float64(len(dot.Moves)) * 5
 }
 
 type Population struct {
@@ -68,10 +69,10 @@ type Population struct {
 	Width, Height int
 	Generation    int
 	Time          float64
-	KillWalls     []KillWall
-
 	Spawn   cp.Vector
 	Target  cp.BB
+
+	killwalls []KillWall
 	fitness Eval
 	Paused  bool
 
@@ -108,13 +109,11 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		},
 		Target: cp.NewBBForExtents(target, Side / 2, Side / 2),
 		fitness: fitness,
+		killwalls: make([]KillWall, 0),
 	}
 
 	p.Space.SleepTimeThreshold = cp.INFINITY
 	p.Space.UseSpatialHash(2, 100)
-	for _, wall := range p.KillWalls {
-		wall.PhysicsShape(p.Space)
-	}
 
 	for i := 0; i < num; i++ {
 		ndot := NewRandomDot()
@@ -124,16 +123,14 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 
 	// 1 == dot, 2 == killwall
 	ch := p.Space.NewCollisionHandler(1, 2)
-	//ch.UserData = p
 	ch.BeginFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
-		fmt.Println("collide")
-		return true
-		//a, b := arb.Bodies()
-		//
-		//dot := a.UserData.(*Dot)
+		a, _ := arb.Bodies()
+
+		dot := a.UserData.(*Dot)
 		//wall := b.UserData.(KillWall)
-		//
-		//_, _ = dot, wall
+
+		p.kill(dot)
+		return false
 	}
 	//p.Space.Coll
 
@@ -145,6 +142,8 @@ func (p *Population) reset() {
 	p.Generation++
 	p.Time = 0
 	p.OnMove = 0
+	p.bestDot = nil
+	p.bestDotFitness = math.Inf(1)
 	for _, dot := range p.Dots {
 		dot.body.SetAngle(0)
 		dot.body.SetTorque(0)
@@ -172,8 +171,8 @@ func (p *Population) stats() statistics {
 	avs := statistics{}
 	for _, dot := range p.Dots {
 		avs.avgFitness += dot.fitness
-		avs.avgMoves += float64(len(dot.moves))
-		avs.avgAge += float64(dot.age)
+		avs.avgMoves += float64(len(dot.Moves))
+		avs.avgAge += float64(dot.Age)
 
 		switch {
 		case dot.dead:
@@ -230,9 +229,9 @@ func (p *Population) evolve() {
 		a.CreatePhysicsBody(p.Space)
 		b.CreatePhysicsBody(p.Space)
 
-		// increase the parent's age (they survived the generation!)
-		p.Dots[i].age++
-		p.Dots[i + 1].age++
+		// increase the parent's Age (they survived the generation!)
+		p.Dots[i].Age++
+		p.Dots[i + 1].Age++
 
 		// overwrite and kill the corresponding lower half
 		for _, body := range []*cp.Body{p.Dots[j].body, p.Dots[j + 1].body} {
@@ -261,6 +260,13 @@ func (p *Population) kill(dot *Dot) {
 	dot.body.SetType(cp.BODY_STATIC)
 }
 
+func (p *Population) AddKillWalls(walls ...KillWall)  {
+	for _, wall := range walls {
+		wall.PhysicsShape(p.Space)
+		p.killwalls = append(p.killwalls, wall)
+	}
+}
+
 func (p *Population) IsBest(dot *Dot) bool {
 	return dot == p.bestDot
 }
@@ -284,17 +290,14 @@ func (p *Population) Step(dt float64) {
 		hitnow = true
 	}
 
-	p.bestDot = nil
-	p.bestDotFitness = 0
-
 	for _, dot := range p.Dots {
 		//if dot.dead || dot.scored {
 		//	dot.body.SetType(cp.BODY_STATIC)
 		//}
 
 		// hit dot when the thing yea
-		if hitnow && p.OnMove < len(dot.moves) {
-			dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
+		if hitnow && p.OnMove < len(dot.Moves) {
+			dot.body.ApplyImpulseAtLocalPoint(dot.Moves[p.OnMove], cp.Vector{})
 		}
 
 		// kill dot if hit wall
@@ -307,7 +310,7 @@ func (p *Population) Step(dt float64) {
 			dot.SetScored()
 		}
 
-		if f := p.fitness(dot, p); f > p.bestDotFitness {
+		if f := p.fitness(dot, p); f < p.bestDotFitness {
 			p.bestDot = dot
 			p.bestDotFitness = f
 		}
@@ -334,6 +337,8 @@ func (p *Population) Draw(dst *ebiten.Image) {
 			c = colornames.Red
 		case dot.scored:
 			c = colornames.Gold
+		case p.IsBest(dot):
+			c = colornames.Hotpink
 		default:
 			c = colornames.White
 		}
@@ -355,7 +360,7 @@ func (p *Population) Draw(dst *ebiten.Image) {
 		//dst.DrawImage(snorb, op)
 	}
 
-	for _, wall := range p.KillWalls {
+	for _, wall := range p.killwalls {
 		wall.Draw(dst)
 	}
 }

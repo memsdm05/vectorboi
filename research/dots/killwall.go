@@ -12,7 +12,7 @@ type KillWall struct {
 	B cp.Vector
 }
 
-func MakeKillWall(ax, ay, by, bx float64) KillWall {
+func MakeKillWall(ax, ay, bx, by float64) KillWall {
 	return KillWall{
 		A: cp.Vector{ax, ay},
 		B: cp.Vector{bx, by},
@@ -25,7 +25,7 @@ func (k KillWall) Draw(dst *ebiten.Image)  {
 }
 
 func (k KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
-	shape := space.AddShape(cp.NewSegment(space.StaticBody, k.B, k.A, 3))
+	shape := cp.NewSegment(space.StaticBody, k.B, k.A, 3)
 	shape.SetCollisionType(2)
 	shape.SetSensor(false)
 	shape.SetFilter(cp.ShapeFilter{
@@ -33,7 +33,8 @@ func (k KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
 		Categories: cp.ALL_CATEGORIES,
 		Mask:       cp.ALL_CATEGORIES,
 	})
-	shape.UserData = k
+	space.AddShape(shape)
+	//shape.UserData = k
 	return shape
 }
 
