@@ -39,8 +39,13 @@ func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 
 	d.body = cp.NewBody(0, 0)
 	shape := cp.NewCircle(d.body, 1, cp.Vector{})
+	shape.SetCollisionType(1)
 	shape.SetMass(1)
-	shape.SetFilter(cp.SHAPE_FILTER_NONE)
+	shape.SetFilter(cp.ShapeFilter{
+		Group: 1,
+		Categories: cp.ALL_CATEGORIES,
+		Mask:       cp.ALL_CATEGORIES,
+	})
 	d.body.AccumulateMassFromShapes()
 
 	space.AddShape(shape)
@@ -50,4 +55,9 @@ func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 
 func (d *Dot) String() string {
 	return fmt.Sprintf("Dot %.2f", d.fitness)
+}
+
+func (d *Dot) SetScored()  {
+	d.scored = true
+	d.body.SetType(cp.BODY_STATIC)
 }

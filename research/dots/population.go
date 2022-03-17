@@ -73,7 +73,7 @@ type Population struct {
 	Spawn   cp.Vector
 	Target  cp.BB
 	fitness Eval
-	running bool
+	Paused  bool
 
 	bestDot        *Dot
 	bestDotFitness float64
@@ -121,28 +121,22 @@ func NewRandomPopulation(num, width, height int, fitness Eval) *Population {
 		ndot.CreatePhysicsBody(p.Space)
 		p.Dots[i] = ndot
 	}
-	
-	ch := p.Space.NewCollisionHandler(cp.WILDCARD_COLLISION_TYPE, cp.WILDCARD_COLLISION_TYPE)
-	ch.UserData = p
-	ch.PreSolveFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
-		a, b := arb.Bodies()
 
-		// actual garbage code
-		var dot *Dot
-		if d, ok := a.UserData.(*Dot); ok {
-			dot = d
-		} else if d, ok = b.UserData.(*Dot); ok  {
-			dot = d
-		} else {
-			panic("huh")
-		}
-		_ = dot
-
+	// 1 == dot, 2 == killwall
+	ch := p.Space.NewCollisionHandler(1, 2)
+	//ch.UserData = p
+	ch.BeginFunc = func(arb *cp.Arbiter, space *cp.Space, userData interface{}) bool {
 		fmt.Println("collide")
-		//userData.(*Population).kill(dot)
-
 		return true
+		//a, b := arb.Bodies()
+		//
+		//dot := a.UserData.(*Dot)
+		//wall := b.UserData.(KillWall)
+		//
+		//_, _ = dot, wall
 	}
+	//p.Space.Coll
+
 	p.reset()
 	return p
 }
@@ -226,24 +220,30 @@ func (p *Population) evolve() {
 	//}
 	for i := 0; i < (l / 2) - 1; i += 2 {
 		j := i + l / 2
+		// crossover two adjecent parents
 		a, b := Crossover(p.Dots[i], p.Dots[i + 1])
+
+		// mutate the resulting children
 		Mutate(a)
 		Mutate(b)
 
 		a.CreatePhysicsBody(p.Space)
 		b.CreatePhysicsBody(p.Space)
 
+		// increase the parent's age (they survived the generation!)
 		p.Dots[i].age++
 		p.Dots[i + 1].age++
+
+		// overwrite and kill the corresponding lower half
+		for _, body := range []*cp.Body{p.Dots[j].body, p.Dots[j + 1].body} {
+			body.EachShape(func(shape *cp.Shape) {
+				p.Space.RemoveShape(shape)
+			})
+			p.Space.RemoveBody(body)
+		}
 		p.Dots[j] = a
 		p.Dots[j + 1] = b
 
-	}
-
-	cp.ShapeFilter{
-		Group:      0,
-		Categories: 0,
-		Mask:       0,
 	}
 
 	//fmt.Println(p.Dots)
@@ -253,12 +253,12 @@ func (p *Population) evolve() {
 
 func (p *Population) unkill(dot *Dot) {
 	dot.dead = false
-	p.Space.Activate(dot.body)
+	dot.body.SetType(cp.BODY_DYNAMIC)
 }
 
 func (p *Population) kill(dot *Dot) {
 	dot.dead = true
-	p.Space.Deactivate(dot.body)
+	dot.body.SetType(cp.BODY_STATIC)
 }
 
 func (p *Population) IsBest(dot *Dot) bool {
@@ -266,6 +266,10 @@ func (p *Population) IsBest(dot *Dot) bool {
 }
 
 func (p *Population) Step(dt float64) {
+	if p.Paused {
+		return
+	}
+
 	if p.Time > GenerationTime { // cahnge this for
 		p.evolve()
 		//p.reset()
@@ -284,14 +288,13 @@ func (p *Population) Step(dt float64) {
 	p.bestDotFitness = 0
 
 	for _, dot := range p.Dots {
-		if dot.dead || dot.scored{
-			p.Space.Deactivate(dot.body)
-		}
+		//if dot.dead || dot.scored {
+		//	dot.body.SetType(cp.BODY_STATIC)
+		//}
 
 		// hit dot when the thing yea
 		if hitnow && p.OnMove < len(dot.moves) {
 			dot.body.ApplyImpulseAtLocalPoint(dot.moves[p.OnMove], cp.Vector{})
-			//dot.body.ApplyForceAtLocalPognt(, cp.Vector{})
 		}
 
 		// kill dot if hit wall
@@ -301,8 +304,7 @@ func (p *Population) Step(dt float64) {
 		}
 
 		if p.Target.ContainsVect(pos) {
-			dot.scored = true
-			p.Space.Deactivate(dot.body)
+			dot.SetScored()
 		}
 
 		if f := p.fitness(dot, p); f > p.bestDotFitness {
