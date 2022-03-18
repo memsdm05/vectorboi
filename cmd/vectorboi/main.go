@@ -1,15 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"os"
-	"time"
 	"vectorboi/app"
 	"vectorboi/app/dot"
+	"vectorboi/app/utils"
 	"vectorboi/helpers"
 )
 
@@ -20,10 +20,34 @@ var RequiredFolders = [...]string{
 	"scenarios",
 }
 
+var (
+	startInEditor = flag.Bool("edit", false, "start in editor")
+	scenarioLoc = flag.String("s", "", "import custom scenario")
+)
+
+func turbo(pop *dot.Population, control chan bool) {
+	active := false
+
+	for {
+		if active {
+			select {
+			case active = <- control:
+			default:
+				pop.Step(1 / 30.)
+			}
+		} else {
+			active = <- control
+		}
+	}
+}
+
 type SimulationGame struct {
 	pop   *dot.Population
 	editor *app.Editor
 	editing bool
+
+	turbo bool
+	turboControl chan bool
 }
 
 func (s *SimulationGame) Init() {
@@ -33,18 +57,24 @@ func (s *SimulationGame) Init() {
 		}
 	}
 
-	//myscenario := dot.DefaultScenario
-	//myscenario.Walls = []structures.KillWall{
-	//	structures.MakeKillWall(2, 200, 300, 300),
-	//	structures.MakeKillWall(float64(myscenario.Width), 100, 220, 200),
-	//	structures.MakeKillWall(200, 200, float64(myscenario.Width-200), 200),
-	//}
-	s.pop = dot.NewPopulation(dot.DefaultScenario)
+	flag.Parse()
+
+
+	myscenario := dot.DefaultScenario
+	if *scenarioLoc != "" {
+		utils.Import("snapshot", *scenarioLoc, &myscenario)
+	}
+
+	s.editing = *startInEditor
+	s.pop = dot.NewPopulation(myscenario)
 	s.editor = app.NewEditor(&s.pop.Scenario)
+	s.turboControl = make(chan bool)
 	ebiten.SetWindowSize(s.pop.Scenario.Width, s.pop.Scenario.Height)
 
+	go turbo(s.pop, s.turboControl)
+
 	//start := time.Now()
-	//for time.Since(start) < 15*time.Second {
+	//for time.Since(start) < 15 * time.Second {
 	//	s.pop.Step(1. / 30)
 	//}
 }
@@ -52,23 +82,26 @@ func (s *SimulationGame) Init() {
 func (s *SimulationGame) Shutdown() {}
 
 func (s *SimulationGame) Update() error {
-	if !s.editing {
-		s.pop.Step(TimeStep)
-	} else {
-		s.editor.Interact()
+	if inpututil.IsKeyJustPressed(ebiten.KeyE) {
+		s.editing = !s.editing
 	}
 
-	switch {
-	case inpututil.IsKeyJustPressed(ebiten.KeySpace):
-		s.pop.Paused = !s.pop.Paused
-	case inpututil.IsKeyJustPressed(ebiten.KeyS) && ebiten.IsKeyPressed(ebiten.KeyControl):
-		filename := fmt.Sprintf("snapshots/%v-snapshot.json", time.Now().UnixMilli())
-		f, _ := os.Create(filename)
-		enc := json.NewEncoder(f)
-		enc.SetIndent("", "    ")
-		enc.Encode(s.pop)
-	case inpututil.IsKeyJustPressed(ebiten.KeyE):
-		s.editing = !s.editing
+	if s.editing {
+		s.editor.Interact()
+	} else {
+		if !s.turbo {
+			s.pop.Step(TimeStep)
+		}
+
+		switch {
+		case inpututil.IsKeyJustPressed(ebiten.KeySpace):
+			s.pop.Paused = !s.pop.Paused
+		case inpututil.IsKeyJustPressed(ebiten.KeyS) && ebiten.IsKeyPressed(ebiten.KeyControl):
+			utils.Export("snapshot", s.pop)
+		case inpututil.IsKeyJustPressed(ebiten.KeyT):
+			s.turbo = !s.turbo
+			s.turboControl <- s.turbo
+		}
 	}
 
 	return nil
@@ -78,6 +111,9 @@ func (s *SimulationGame) Draw(screen *ebiten.Image) {
 	if !s.editing {
 		s.pop.Draw(screen)
 		msg := fmt.Sprintf("kick %v, gen %v, dt %.2f", s.pop.KickIndex, s.pop.Generation, s.pop.Time)
+		if s.turbo {
+			msg += "\n>>"
+		}
 		ebitenutil.DebugPrint(screen, msg)
 	} else {
 		x, y := ebiten.CursorPosition()

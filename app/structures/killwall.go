@@ -10,6 +10,7 @@ import (
 type KillWall struct {
 	A cp.Vector
 	B cp.Vector
+	added bool
 }
 
 func MakeKillWall(ax, ay, bx, by float64) KillWall {
@@ -24,7 +25,11 @@ func (k KillWall) Draw(dst *ebiten.Image) {
 		k.A.X, k.A.Y, k.B.X, k.B.Y, colornames.Orange)
 }
 
-func (k KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
+func (k *KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
+	if k.added {
+		return nil
+	}
+
 	shape := cp.NewSegment(space.StaticBody, k.B, k.A, 3)
 	shape.SetCollisionType(2)
 	shape.SetSensor(true)
@@ -34,5 +39,6 @@ func (k KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
 		Mask:       cp.ALL_CATEGORIES,
 	})
 	space.AddShape(shape)
+	k.added = true
 	return shape
 }

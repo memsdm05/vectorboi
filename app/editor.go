@@ -3,13 +3,17 @@ package app
 import (
 	"bytes"
 	_ "embed"
+	"fmt"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
 	"image/color"
 	_ "image/png"
 	"vectorboi/app/dot"
+	"vectorboi/app/structures"
+	"vectorboi/app/utils"
 )
 
 //go:embed spawn_ball.png
@@ -21,7 +25,7 @@ var sbw, sbh = spawnBall.Size()
 type Editor struct {
 	work *dot.Scenario
 	buildingWall bool
-	wallStart bool
+	wallStart cp.Vector
 	sbOP *ebiten.DrawImageOptions
 }
 
@@ -39,6 +43,18 @@ func (e *Editor) Interact() {
 	x, y := ebiten.CursorPosition()
 	mpos := cp.Vector{float64(x), float64(y)}
 
+	switch {
+	case inpututil.IsKeyJustPressed(ebiten.KeyZ) && ebiten.IsKeyPressed(ebiten.KeyControl):
+		e.work.Walls = e.work.Walls[:len(e.work.Walls) - 1]
+	case inpututil.IsKeyJustPressed(ebiten.KeyAlt):
+		e.wallStart = cp.Vector{}
+	case inpututil.IsKeyJustPressed(ebiten.KeyS) && ebiten.IsKeyPressed(ebiten.KeyControl):
+		fmt.Printf("Set Name (currently \"%v\"): ", e.work.Name)
+		fmt.Scanln(&e.work.Name)
+		utils.Export("scenario", e.work)
+	}
+
+
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		switch {
 		case mpos.Near(e.work.Spawn, 15):
@@ -47,7 +63,19 @@ func (e *Editor) Interact() {
 			center := e.work.Target.Center()
 			e.work.Target = e.work.Target.Offset(mpos.Sub(center))
 		default:
+			switch {
+			case inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft):
+				if e.wallStart.Equal(cp.Vector{}) {
+					e.wallStart = mpos
+				}
 
+				e.work.Walls = append(e.work.Walls, structures.KillWall{
+					A: e.wallStart,
+					B: mpos,
+				})
+
+				e.wallStart = mpos
+			}
 		}
 	}
 }
@@ -74,4 +102,9 @@ func (e *Editor) Draw(dst *ebiten.Image) {
 	e.sbOP.GeoM.Scale(0.2,0.2)
 	e.sbOP.GeoM.Translate(e.work.Spawn.X, e.work.Spawn.Y)
 	dst.DrawImage(spawnBall, e.sbOP)
+
+	for _, k := range e.work.Walls {
+		ebitenutil.DrawLine(dst,
+			k.A.X, k.A.Y, k.B.X, k.B.Y, colornames.White)
+	}
 }

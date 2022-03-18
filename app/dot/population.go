@@ -43,6 +43,7 @@ type Population struct {
 	exr          *utils.ExRand
 	space        *cp.Space
 	targetCenter cp.Vector
+	oldWallLen 	 int
 	fitness      Eval
 	best         struct {
 		dot     *Dot
@@ -79,11 +80,6 @@ func NewPopulation(scenario Scenario) *Population {
 		a, _ := arb.Bodies()
 		a.UserData.(*Dot).Inflict(Dead)
 		return false
-	}
-
-	// add killwalls
-	for _, wall := range p.Scenario.Walls {
-		wall.PhysicsShape(p.space)
 	}
 
 	// fill population with random dots
@@ -207,6 +203,13 @@ func (p *Population) Step(dt float64) {
 	if p.Paused || dt == 0 {
 		return
 	}
+	
+	if len(p.Scenario.Walls) != p.oldWallLen {
+		for _, wall := range p.Scenario.Walls {
+			wall.PhysicsShape(p.space)
+		}
+		p.oldWallLen = len(p.Scenario.Walls)
+	}
 
 	if p.Time >= p.Scenario.GenerationTime {
 		p.evolve()
@@ -254,6 +257,10 @@ func (p *Population) Step(dt float64) {
 	}
 }
 
+//func (p *Population) FindDot(pos cp.Vector) *Dot {
+//	pqi := p.space.PointQueryNearest(pos, 2, cp.ShapeFilter{Group: 1})
+//}
+
 func (p *Population) Draw(dst *ebiten.Image) {
 	t := p.Scenario.Target
 	ebitenutil.DrawRect(dst,
@@ -272,8 +279,7 @@ func (p *Population) Draw(dst *ebiten.Image) {
 			c = colornames.White
 		}
 		if dot == p.best.dot {
-			c = colornames.Hotpink
-			dot.DrawHistory(dst)
+			dot.DrawHistory(dst, colornames.Lightblue)
 		}
 		dst.Set(int(pos.X), int(pos.Y), c)
 	}

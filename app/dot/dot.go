@@ -6,7 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/jakecoffman/cp"
-	"golang.org/x/image/colornames"
+	"image/color"
 	"math"
 	"vectorboi/app/utils"
 )
@@ -105,7 +105,7 @@ func (d *Dot) Inflict(status DotStatus) {
 	}
 }
 
-func (d *Dot) DrawHistory(dst *ebiten.Image) {
+func (d *Dot) DrawHistory(dst *ebiten.Image, c color.Color) {
 	all := append(d.history, d.body.Position())
 	if len(all) == 1 {
 		return
@@ -113,6 +113,6 @@ func (d *Dot) DrawHistory(dst *ebiten.Image) {
 	for i := 0; i < len(all)-1; i++ {
 		a := all[i]
 		b := all[i+1]
-		ebitenutil.DrawLine(dst, a.X, a.Y, b.X, b.Y, colornames.Lightblue)
+		ebitenutil.DrawLine(dst, a.X, a.Y, b.X, b.Y, c)
 	}
 }

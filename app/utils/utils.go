@@ -2,7 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"os"
+	"time"
 )
 
 type ExRand struct {
@@ -15,6 +18,28 @@ func NewExRand(seed int) *ExRand {
 	return &ExRand{
 		seed: s,
 		Rand: rand.New(rand.NewSource(s)),
+	}
+}
+
+func Import(where string, name string, v interface{}) {
+	f, err := os.Open(where + "/" + name)
+	if err != nil {
+		return
+	}
+
+	json.NewDecoder(f).Decode(v)
+}
+
+func Export(name string, v interface{}) {
+	filename := fmt.Sprintf("%[1]ss/%[2]v-%[1]s.json", name, time.Now().UnixMilli())
+	f, err := os.Create(filename)
+	if err != nil {
+		panic(err)
+	}
+	enc := json.NewEncoder(f)
+	enc.SetIndent("", "    ")
+	if err = enc.Encode(v); err != nil {
+		panic(err)
 	}
 }
 

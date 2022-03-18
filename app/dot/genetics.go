@@ -19,7 +19,7 @@ func (p *Population) mutate(d *Dot) *Dot {
 			move := &d.Kicks[i]
 			move.X += p.exr.Uniform(-5, 5)
 			move.Y += p.exr.Uniform(-5, 5)
-			*move = move.Clamp(100)
+			//*move = move.Clamp(100)
 		}
 
 		// remove a kick (if there is more than 1 kick left)
