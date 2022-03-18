@@ -212,8 +212,8 @@ func (p *Population) Step(dt float64) {
 
 	p.space.Step(dt)
 
-	hitnow := p.Time >= float64(p.KickIndex) * p.Scenario.KickTime
 	p.Time += dt
+	hitnow := p.Time >= float64(p.KickIndex) * p.Scenario.KickTime
 
 	// find most fit dot ( O(n) lol )
 	p.resetBest()
