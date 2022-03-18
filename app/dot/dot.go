@@ -13,13 +13,14 @@ import (
 
 func RandomVector(exr *utils.ExRand) cp.Vector {
 	return cp.
-		ForAngle(exr.Uniform(0, 2 * math.Pi)).
+		ForAngle(exr.Uniform(0, 2*math.Pi)).
 		Mult(exr.Uniform(50, 100))
 }
 
 type DotStatus int
+
 const (
-	Vibing = iota
+	Vibing = DotStatus(iota)
 	Dead
 	Scored
 )
@@ -46,9 +47,9 @@ func (ds DotStatus) Static() bool {
 }
 
 type Dot struct {
-	Kicks []cp.Vector
-	Age   int
-	Status  DotStatus
+	Kicks  []cp.Vector
+	Age    int
+	Status DotStatus
 
 	history []cp.Vector
 	body    *cp.Body
@@ -57,8 +58,8 @@ type Dot struct {
 
 func randomDot(pop *Population) *Dot {
 	dot := &Dot{Kicks: make([]cp.Vector, 0)}
-	for i := 0; i < pop.Rand.IntRange(5, 15); i++ {
-		dot.Kicks = append(dot.Kicks, RandomVector(pop.Rand))
+	for i := 0; i < pop.exr.IntRange(5, 15); i++ {
+		dot.Kicks = append(dot.Kicks, RandomVector(pop.exr))
 	}
 	dot.history = make([]cp.Vector, 0)
 	dot.CreatePhysicsBody(pop.space)
@@ -80,7 +81,7 @@ func (d *Dot) CreatePhysicsBody(space *cp.Space) {
 	shape.SetCollisionType(1)
 	shape.SetMass(1)
 	shape.SetFilter(cp.ShapeFilter{
-		Group: 1,
+		Group:      1,
 		Categories: cp.ALL_CATEGORIES,
 		Mask:       cp.ALL_CATEGORIES,
 	})
@@ -104,12 +105,14 @@ func (d *Dot) Inflict(status DotStatus) {
 	}
 }
 
-func (d *Dot) DrawHistory(dst *ebiten.Image)  {
+func (d *Dot) DrawHistory(dst *ebiten.Image) {
 	all := append(d.history, d.body.Position())
-	if len(all) == 1 { return }
-	for i := 0; i < len(all) - 1; i++ {
+	if len(all) == 1 {
+		return
+	}
+	for i := 0; i < len(all)-1; i++ {
 		a := all[i]
-		b := all[i + 1]
+		b := all[i+1]
 		ebitenutil.DrawLine(dst, a.X, a.Y, b.X, b.Y, colornames.Lightblue)
 	}
 }

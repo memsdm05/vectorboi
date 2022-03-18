@@ -11,29 +11,29 @@ const (
 )
 
 type Chances struct {
-	ChangeKick   float64
-	RemoveKick   float64
-	AddKick      float64
-	SwapKick     float64
+	ChangeKick float64
+	RemoveKick float64
+	AddKick    float64
+	SwapKick   float64
 }
 
 type Scenario struct {
-	Name string
-	Seed int
-	Width, Height int
-	Size int
-	KickTime float64
-	Chances Chances
+	Name           string
+	Seed           int
+	Width, Height  int
+	Size           int
+	KickTime       float64
+	Chances        Chances
 	GenerationTime float64
-	Damping float64
-	Spawn cp.Vector
-	Target cp.BB
-	Walls []structures.KillWall
+	Damping        float64
+	Spawn          cp.Vector
+	Target         cp.BB
+	Walls          []structures.KillWall
 }
 
 func (s Scenario) Valid() bool {
 	switch {
-	case s.Size % 2 != 0:
+	case s.Size%2 != 0:
 	case s.Walls == nil:
 	case s.KickTime < 0:
 	case s.GenerationTime < 0:
@@ -61,14 +61,14 @@ var DefaultScenario = Scenario{
 	KickTime:       1.2,
 	GenerationTime: 10,
 	Damping:        0.5,
-	Chances: DefaultChances,
-	Spawn:          cp.Vector{
+	Chances:        DefaultChances,
+	Spawn: cp.Vector{
 		X: defw / 2,
-		Y: defh - defh / 10,
+		Y: defh - defh/10,
 	},
 	Target: cp.NewBBForExtents(cp.Vector{
 		X: defw / 2,
-		Y: defh / 2,
+		Y: defh / 10,
 	}, 10, 10),
-	Walls:          make([]structures.KillWall, 0),
+	Walls: make([]structures.KillWall, 0),
 }
