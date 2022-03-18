@@ -1,4 +1,4 @@
-package main
+package structures
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
@@ -19,7 +19,7 @@ func MakeKillWall(ax, ay, bx, by float64) KillWall {
 	}
 }
 
-func (k KillWall) Draw(dst *ebiten.Image)  {
+func (k KillWall) Draw(dst *ebiten.Image) {
 	ebitenutil.DrawLine(dst,
 		k.A.X, k.A.Y, k.B.X, k.B.Y, colornames.Orange)
 }
@@ -27,15 +27,12 @@ func (k KillWall) Draw(dst *ebiten.Image)  {
 func (k KillWall) PhysicsShape(space *cp.Space) *cp.Shape {
 	shape := cp.NewSegment(space.StaticBody, k.B, k.A, 3)
 	shape.SetCollisionType(2)
-	shape.SetSensor(false)
+	shape.SetSensor(true)
 	shape.SetFilter(cp.ShapeFilter{
-		Group: 2,
+		Group:      2,
 		Categories: cp.ALL_CATEGORIES,
 		Mask:       cp.ALL_CATEGORIES,
 	})
 	space.AddShape(shape)
-	//shape.UserData = k
 	return shape
 }
-
-// lol

@@ -1,4 +1,4 @@
-package main
+package app
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/jakecoffman/cp"
 	"golang.org/x/image/colornames"
 	"time"
+	"vectorboi/app/dot"
 	"vectorboi/helpers"
 )
 
@@ -19,21 +20,21 @@ const (
 )
 
 type DotGame struct {
-	pop *Population
+	pop *dot.Population
 	debug bool
 }
 
 func (d *DotGame) Init() {
-	d.pop = NewRandomPopulation(PopulationSize, Width, Height, nil)
+	d.pop = dot.NewRandomPopulation(PopulationSize, Width, Height, nil)
 	d.pop.Space.SetDamping(0.5)
 	d.pop.AddKillWalls(
-		MakeKillWall(2, 200, 300, 300),
-		MakeKillWall(Width, 100, 220, 200),
-		//MakeKillWall(200, 200, Width - 200, 200),
+		app.MakeKillWall(2, 200, 300, 300),
+		app.MakeKillWall(Width, 100, 220, 200),
+		app.MakeKillWall(200, 200, Width - 200, 200),
 	)
 
 	start := time.Now()
-	for time.Since(start) < 15 * time.Second {
+	for time.Since(start) < 40 * time.Second {
 		d.pop.Step(1./30)
 	}
 	//d.pop.Space.SetGravity(cp.Vector{Y: 1000})
@@ -61,8 +62,8 @@ func (d *DotGame) Update() error {
 
 	//if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
 	//	for _, dot := range d.pop.Dots {
-	//		if d.pop.OnMove < len(dot.Moves) {
-	//			dot.body.ApplyImpulseAtLocalPoint(dot.Moves[d.pop.OnMove], cp.Vector{})
+	//		if d.pop.OnMove < len(dot.Kicks) {
+	//			dot.body.ApplyImpulseAtLocalPoint(dot.Kicks[d.pop.OnMove], cp.Vector{})
 	//			//dot.body.ApplyForceAtLocalPoint(, cp.Vector{})
 	//		}
 	//	}
