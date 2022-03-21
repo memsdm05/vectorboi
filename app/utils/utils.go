@@ -21,10 +21,10 @@ func NewExRand(seed int) *ExRand {
 	}
 }
 
-func Import(where string, name string, v interface{}) {
-	f, err := os.Open(where + "/" + name)
+func Import(path string, v interface{}) {
+	f, err := os.Open(path)
 	if err != nil {
-		return
+		panic("can't import " + path)
 	}
 
 	json.NewDecoder(f).Decode(v)

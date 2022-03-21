@@ -56,13 +56,11 @@ func (s *SimulationGame) Init() {
 			os.Mkdir(folder, 777)
 		}
 	}
-
 	flag.Parse()
-
 
 	myscenario := dot.DefaultScenario
 	if *scenarioLoc != "" {
-		utils.Import("snapshot", *scenarioLoc, &myscenario)
+		utils.Import(*scenarioLoc, &myscenario)
 	}
 
 	s.editing = *startInEditor
